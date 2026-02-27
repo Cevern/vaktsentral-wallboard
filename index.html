@@ -735,7 +735,11 @@ async function fetchList(siteUrl, listName, filter = '') {
   let url = `${base}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$top=50&$orderby=Created desc`;
   if (filter) url += `&$filter=${filter}`;
   const res = await fetch(url, {
-    headers: { 'Accept': 'application/json;odata=nometadata' }
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json;odata=nometadata',
+      'Content-Type': 'application/json;odata=nometadata'
+    }
   });
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${listName}`);
   const data = await res.json();

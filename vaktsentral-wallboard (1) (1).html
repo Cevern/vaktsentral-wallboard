@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vaktsentral – Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060b12;
+    --bg-panel: #0a1018;
+    --bg-card: #0d1520;
+    --border: rgba(255,255,255,0.07);
+    --kritisk: #ff2828;
+    --kritisk-glow: rgba(255,40,40,0.20);
+    --viktig: #f5a623;
+    --viktig-glow: rgba(245,166,35,0.15);
+    --info: #2d8bff;
+    --info-glow: rgba(45,139,255,0.12);
+    --aktiv: #00d4aa;
+    --text-primary: #eef4fb;
+    --text-secondary: #7a9bb5;
+    --text-dim: #3d5568;
+    --accent-line: rgba(45,139,255,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Barlow', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 52px;
+    background: #070d14;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--aktiv);
+    box-shadow: 0 0 8px var(--aktiv);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--aktiv); }
+    50% { opacity: 0.5; box-shadow: 0 0 3px var(--aktiv); }
+  }
+
+  .topbar-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .topbar-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .clock {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 22px;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+  }
+
+  .date {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    text-align: right;
+  }
+
+  .refresh-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .refresh-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+  }
+
+  .refresh-dot.syncing {
+    background: var(--aktiv);
+    box-shadow: 0 0 6px var(--aktiv);
+    animation: blink 0.4s ease-in-out 3;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    grid-template-rows: 1fr;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+  }
+
+  .panel:last-child { border-right: none; }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: #080e16;
+    flex-shrink: 0;
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .panel-title-icon { font-size: 15px; }
+
+  .panel-count {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* ── DRIFT CARDS ── */
+  .drift-card {
+    border-radius: 8px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s ease;
+  }
+
+  .drift-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+  }
+
+  .drift-card.kritisk {
+    background: linear-gradient(135deg, #130608 0%, #0d1520 100%);
+    border-color: rgba(255,40,40,0.20);
+    box-shadow: 0 0 20px rgba(255,40,40,0.12), inset 0 0 40px rgba(255,40,40,0.03);
+  }
+
+  .drift-card.kritisk::before { background: var(--kritisk); box-shadow: 2px 0 12px rgba(255,40,40,0.5); }
+
+  .drift-card.kritisk.blink-card {
+    animation: kritisk-pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes kritisk-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(255,40,40,0.12), inset 0 0 40px rgba(255,40,40,0.03); }
+    50% { box-shadow: 0 0 35px rgba(255,40,40,0.28), inset 0 0 60px rgba(255,40,40,0.07); }
+  }
+
+  .drift-card.viktig {
+    background: linear-gradient(135deg, #110e04 0%, #0d1520 100%);
+    border-color: rgba(245,166,35,0.15);
+    box-shadow: 0 0 16px rgba(245,166,35,0.08);
+  }
+
+  .drift-card.viktig::before { background: var(--viktig); box-shadow: 2px 0 10px rgba(245,166,35,0.4); }
+
+  .drift-card.info {
+    background: var(--bg-card);
+    border-color: rgba(45,139,255,0.12);
+  }
+
+  .drift-card.info::before { background: var(--info); }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 10px;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 0.2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+
+  .badge {
+    font-size: 10px;
+    font-weight: 900;
+    padding: 4px 10px;
+    border-radius: 5px;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  .badge.kritisk { background: rgba(255,40,40,0.20); color: #ff6060; }
+  .badge.viktig  { background: rgba(245,166,35,0.20); color: #ffd080; }
+  .badge.info    { background: rgba(45,139,255,0.18); color: #7fb4ff; }
+
+  .card-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .chip {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.07);
+    color: #8fafc8;
+    letter-spacing: 0.2px;
+  }
+
+  .card-message {
+    font-size: 13px;
+    color: #ccdde8;
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .aktiv-badge {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(0,212,170,0.14);
+    color: var(--aktiv);
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  .card-time {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .card-time.kritisk-time { color: #ff7070; }
+
+  /* ── JOURNAL CARDS ── */
+  .journal-card {
+    border-radius: 8px;
+    padding: 13px 15px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--text-dim);
+    transition: transform 0.15s ease;
+  }
+
+  .journal-card.new-entry {
+    animation: slide-in 0.4s ease-out;
+  }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .journal-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .journal-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    flex: 1;
+  }
+
+  .journal-time {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .journal-meta {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .journal-body {
+    font-size: 12px;
+    color: #9ab5cc;
+    line-height: 1.45;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 10px;
+    color: var(--text-dim);
+  }
+
+  .empty-state .icon { font-size: 32px; opacity: 0.4; }
+  .empty-state .text { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ── STATUS BAR ── */
+  .statusbar {
+    height: 28px;
+    background: #050a10;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 24px;
+    flex-shrink: 0;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .status-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+
+  .status-dot.green { background: var(--aktiv); box-shadow: 0 0 5px var(--aktiv); }
+  .status-dot.red   { background: var(--kritisk); }
+  .status-dot.yellow{ background: var(--viktig); }
+  .status-dot.blue  { background: var(--info); }
+
+  /* ── KRITISK BANNER ── */
+  .kritisk-banner {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 8px 20px;
+    background: rgba(255,40,40,0.12);
+    border-bottom: 1px solid rgba(255,40,40,0.30);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #ff5555;
+    text-transform: uppercase;
+    animation: banner-pulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  .kritisk-banner.visible { display: flex; }
+
+  @keyframes banner-pulse {
+    0%, 100% { background: rgba(255,40,40,0.12); }
+    50% { background: rgba(255,40,40,0.20); }
+  }
+
+  /* ── SCROLLBAR ── */
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-track { background: transparent; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+
+</style>
+</head>
+<body>
+
+
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-dot"></div>
+    <div>
+      <div class="topbar-title">Vaktsentral – Command Center</div>
+      <div class="topbar-subtitle" id="locationLabel">Mustad Eiendom</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="refresh-indicator">
+      <div class="refresh-dot" id="refreshDot"></div>
+      <span id="refreshLabel">Oppdaterer om <span id="nextRefresh">30</span>s</span>
+    </div>
+    <div>
+      <div class="clock" id="clock">00:00:00</div>
+      <div class="date" id="dateLine">–</div>
+    </div>
+  </div>
+</div>
+
+<!-- KRITISK BANNER -->
+<div class="kritisk-banner" id="kritiskBanner">
+  🚨 KRITISK MELDING AKTIV – SE DRIFTMELDINGER
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- PANEL 1: DRIFTMELDINGER -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <span class="panel-title-icon">📡</span>
+        Driftmeldinger
+      </div>
+      <div class="panel-count" id="driftCount">– aktive</div>
+    </div>
+    <div class="panel-body" id="driftBody">
+      <div class="empty-state">
+        <div class="icon">📡</div>
+        <div class="text">Laster meldinger...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: JOURNAL -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <span class="panel-title-icon">📋</span>
+        Hendelseslogg
+      </div>
+      <div class="panel-count" id="journalCount">– oppføringer</div>
+    </div>
+    <div class="panel-body" id="journalBody">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <div class="text">Laster journal...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="status-item">
+    <div class="status-dot green"></div>
+    SYSTEM ONLINE
+  </div>
+  <div class="status-item" id="kritiskCount">
+    <div class="status-dot red"></div>
+    <span id="kritiskNum">0</span> KRITISK
+  </div>
+  <div class="status-item" id="viktigCount">
+    <div class="status-dot yellow"></div>
+    <span id="viktigNum">0</span> VIKTIG
+  </div>
+  <div class="status-item" id="infoCount">
+    <div class="status-dot blue"></div>
+    <span id="infoNum">0</span> INFO
+  </div>
+  <div class="status-item" style="margin-left:auto;">
+    SIST OPPDATERT: <span id="lastUpdated" style="margin-left:6px;">–</span>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+let CONFIG = {
+  siteUrl: 'https://mustadeiendom.sharepoint.com/sites/Vaktsentral',
+  driftList: 'Vaktsentral Nyhetsoppslag',
+  journalList: 'Vaktsentral_Journal',
+  mode: 'live'
+};
+let refreshInterval = null;
+let countdownInterval = null;
+let countdown = 30;
+
+// ── CLOCK ────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('dateLine').textContent =
+    now.toLocaleDateString('no-NO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── COUNTDOWN ────────────────────────────────────────────
+function startCountdown() {
+  countdown = 30;
+  clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    countdown--;
+    document.getElementById('nextRefresh').textContent = countdown;
+    if (countdown <= 0) countdown = 30;
+  }, 1000);
+}
+
+// ── CATEGORY EMOJI ───────────────────────────────────────
+function kategoriEmoji(kat) {
+  if (!kat) return '⚙️';
+  const k = kat.toLowerCase();
+  if (k.includes('adgang'))  return '🔐';
+  if (k.includes('nøkkel'))  return '🗝️';
+  if (k.includes('kode') || k.includes('pin')) return '🔢';
+  if (k.includes('alarm'))   return '🚨';
+  if (k.includes('kamera') || k.includes('itv')) return '📷';
+  if (k.includes('rutine') || k.includes('prosedyre')) return '📄';
+  if (k.includes('dør') || k.includes('port')) return '🚪';
+  if (k.includes('system'))  return '💻';
+  return '⚙️';
+}
+
+function viktEmoji(grad) {
+  if (grad === 'Kritisk') return '🔴';
+  if (grad === 'Viktig')  return '🟡';
+  return '🔵';
+}
+
+function formatTime(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const today = new Date();
+  const isToday = d.toDateString() === today.toDateString();
+  const time = d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
+  if (isToday) return `i dag ${time}`;
+  return d.toLocaleDateString('no-NO', { day: 'numeric', month: 'short' }) + ' ' + time;
+}
+
+// ── RENDER DRIFT ─────────────────────────────────────────
+function renderDrift(items) {
+  const body = document.getElementById('driftBody');
+  const banner = document.getElementById('kritiskBanner');
+
+  const aktive = items
+    .filter(i => i.Aktiv)
+    .sort((a, b) => {
+      const order = { Kritisk: 1, Viktig: 2, Info: 3 };
+      const ao = order[a.Viktighetsgrad] || 9;
+      const bo = order[b.Viktighetsgrad] || 9;
+      if (ao !== bo) return ao - bo;
+      return new Date(b.Modified || b.Created) - new Date(a.Modified || a.Created);
+    });
+
+  const kritisk = aktive.filter(i => i.Viktighetsgrad === 'Kritisk').length;
+  const viktig  = aktive.filter(i => i.Viktighetsgrad === 'Viktig').length;
+  const info    = aktive.filter(i => i.Viktighetsgrad === 'Info').length;
+
+  document.getElementById('driftCount').textContent = `${aktive.length} aktive`;
+  document.getElementById('kritiskNum').textContent = kritisk;
+  document.getElementById('viktigNum').textContent  = viktig;
+  document.getElementById('infoNum').textContent    = info;
+
+  banner.classList.toggle('visible', kritisk > 0);
+
+  if (aktive.length === 0) {
+    body.innerHTML = `<div class="empty-state"><div class="icon">✅</div><div class="text">Ingen aktive driftmeldinger</div></div>`;
+    return;
+  }
+
+  body.innerHTML = aktive.map(item => {
+    const grad = item.Viktighetsgrad || 'Info';
+    const gradLow = grad.toLowerCase();
+    const emoji = viktEmoji(grad);
+    const katEmoji = kategoriEmoji(item.Kategori);
+    const isKritisk = grad === 'Kritisk';
+    const timeStr = formatTime(item.Modified || item.Created);
+
+    return `
+      <div class="drift-card ${gradLow}${isKritisk ? ' blink-card' : ''}">
+        <div class="card-top">
+          <div class="card-title">${escHtml(item.Title || '–')}</div>
+          <div class="badge ${gradLow}">${emoji} ${grad.toUpperCase()}</div>
+        </div>
+        <div class="card-chips">
+          ${item.Kategori ? `<span class="chip">${katEmoji} ${escHtml(item.Kategori)}</span>` : ''}
+          ${item.Gjelder  ? `<span class="chip">📍 ${escHtml(item.Gjelder)}</span>` : ''}
+        </div>
+        ${item.Melding ? `<div class="card-message">${escHtml(item.Melding)}</div>` : ''}
+        <div class="card-footer">
+          ${item.Aktiv ? '<span class="aktiv-badge">⚡ AKTIV</span>' : ''}
+          <span class="card-time ${isKritisk ? 'kritisk-time' : ''}">${isKritisk ? '🚨 ' : '🕐 '}${timeStr}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── RENDER JOURNAL ───────────────────────────────────────
+function renderJournal(items) {
+  const body = document.getElementById('journalBody');
+  document.getElementById('journalCount').textContent = `${items.length} oppføringer`;
+
+  if (items.length === 0) {
+    body.innerHTML = `<div class="empty-state"><div class="icon">📋</div><div class="text">Ingen hendelser logget</div></div>`;
+    return;
+  }
+
+  // Sort newest first
+  const sorted = [...items].sort((a, b) =>
+    new Date(b.Created || 0) - new Date(a.Created || 0)
+  );
+
+  body.innerHTML = sorted.map((item, idx) => {
+    const timeStr = formatTime(item.Created);
+    return `
+      <div class="journal-card${idx === 0 ? ' new-entry' : ''}">
+        <div class="journal-top">
+          <div class="journal-title">${escHtml(item.Title || '–')}</div>
+          <div class="journal-time">${timeStr}</div>
+        </div>
+        ${item.Kategori || item.Sted || item.Status ? `
+        <div class="journal-meta">
+          ${item.Status   ? `<span class="chip">${escHtml(item.Status)}</span>` : ''}
+          ${item.Kategori ? `<span class="chip">${escHtml(item.Kategori)}</span>` : ''}
+          ${item.Sted     ? `<span class="chip">📍 ${escHtml(item.Sted)}</span>` : ''}
+        </div>` : ''}
+        ${item.Beskrivelse || item.Melding ? `
+        <div class="journal-body">${escHtml(item.Beskrivelse || item.Melding || '')}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── FETCH FROM SHAREPOINT ────────────────────────────────
+async function fetchList(siteUrl, listName, filter = '') {
+  const base = siteUrl.replace(/\/$/, '');
+  let url = `${base}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$top=50&$orderby=Created desc`;
+  if (filter) url += `&$filter=${filter}`;
+  const res = await fetch(url, {
+    headers: { 'Accept': 'application/json;odata=nometadata' }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${listName}`);
+  const data = await res.json();
+  return data.value || [];
+}
+
+async function loadData() {
+  if (CONFIG.mode === 'demo') { loadDemo(); return; }
+
+  const dot = document.getElementById('refreshDot');
+  dot.classList.add('syncing');
+  setTimeout(() => dot.classList.remove('syncing'), 1200);
+
+  try {
+    const [drift, journal] = await Promise.all([
+      fetchList(CONFIG.siteUrl, CONFIG.driftList),
+      fetchList(CONFIG.siteUrl, CONFIG.journalList)
+    ]);
+    renderDrift(drift);
+    renderJournal(journal);
+    document.getElementById('lastUpdated').textContent =
+      new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } catch (err) {
+    console.error('Fetch error:', err);
+    document.getElementById('driftBody').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div><div class="text">Kunne ikke laste data</div></div>`;
+  }
+
+  startCountdown();
+}
+
+// ── DEMO DATA ────────────────────────────────────────────
+function loadDemo() {
+  const driftDemo = [
+    { Title: 'Heisalarm – CC Vest', Viktighetsgrad: 'Kritisk', Aktiv: true,
+      Kategori: 'Alarm', Gjelder: 'CC Vest', Modified: new Date().toISOString(),
+      Melding: 'Heis nr. 3 har utløst nødstopp. Tekniker er varslet og på vei. Ikke bruk heisen.' },
+    { Title: 'Ny kode til nøkkelboks', Viktighetsgrad: 'Viktig', Aktiv: true,
+      Kategori: 'Kode', Gjelder: 'LV8 Garasje', Modified: new Date(Date.now()-3600000).toISOString(),
+      Melding: 'Kode endret fra 18:00 i dag. Gammel kode er deaktivert. Ny kode i låst konvolutt på vaktrommet.' },
+    { Title: 'Kameraoppdatering', Viktighetsgrad: 'Info', Aktiv: true,
+      Kategori: 'Kamera', Gjelder: 'Hele porteføljen', Modified: new Date(Date.now()-7200000).toISOString(),
+      Melding: 'Planlagt vedlikehold på kamerasystemet lørdag 01:00–03:00. Kameraer vil være nede i perioden.' }
+  ];
+  const journalDemo = [
+    { Title: 'Patrulje – CC Vest parkering', Created: new Date().toISOString(),
+      Status: 'Fullført', Kategori: 'Patrulje', Sted: 'CC Vest',
+      Beskrivelse: 'Rutinepatrulje fullført. Ingen avvik observert.' },
+    { Title: 'Innbruddsforsøk garasje LV8', Created: new Date(Date.now()-1800000).toISOString(),
+      Status: 'Under behandling', Kategori: 'Innbrudd', Sted: 'LV8',
+      Beskrivelse: 'Forsøk på å bryte seg inn via garasjeport. Politi varslet, ref. 2024-110234.' },
+    { Title: 'Besøkende – leietaker Acme AS', Created: new Date(Date.now()-3600000).toISOString(),
+      Status: 'Fullført', Kategori: 'Adgang', Sted: 'LV8 3. etg',
+      Beskrivelse: 'Besøkende registrert og eskortert til møterom 3B.' },
+    { Title: 'Brannvarsel – automatisk', Created: new Date(Date.now()-5400000).toISOString(),
+      Status: 'Avklart', Kategori: 'Alarm', Sted: 'CC Vest kjøkken',
+      Beskrivelse: 'Automatisk brannvarsel utløst av matos. Ingen fare. Reset utført.' },
+    { Title: 'Vaktbytte – dagvakt til kveldsvakt', Created: new Date(Date.now()-7200000).toISOString(),
+      Status: 'Fullført', Kategori: 'Rutine', Sted: 'Vaktrom',
+      Beskrivelse: 'Normalt vaktbytte. Ingen pågående hendelser ved overleveringen.' }
+  ];
+  renderDrift(driftDemo);
+  renderJournal(journalDemo);
+  document.getElementById('lastUpdated').textContent =
+    new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  startCountdown();
+}
+
+// ── AUTO START ───────────────────────────────────────────
+window.addEventListener('load', () => {
+  loadData();
+  refreshInterval = setInterval(loadData, 30000);
+});
+</script>
+</body>
+</html>

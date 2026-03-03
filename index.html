@@ -880,50 +880,13 @@ function renderJournal(items) {
 
   if(items.length===0){body.innerHTML=`<div class="empty-state"><div class="icon">📋</div><div class="text">Ingen hendelser logget</div></div>`;return;}
 
-  // Helper: get the "Dato & Tid" field
-  // Logs all keys on first call so we can identify the exact field name
-  let _dateFieldName = null;
+  // Helper: get the "DatoTid" field (confirmed SharePoint internal name)
   function getItemDate(item) {
-    // If we already found the field name, use it directly
-    if (_dateFieldName && item[_dateFieldName]) {
-      const d = new Date(spVal(item[_dateFieldName]));
+    if (item.DatoTid) {
+      const d = new Date(item.DatoTid);
       if (!isNaN(d)) return d;
     }
-    // Try all known variants of "Dato & Tid" SP internal names
-    const candidates = [
-      'Dato_x0020__x0026__x0020_Tid',  // "Dato & Tid" standard SP encoding
-      'Dato_x0020_og_x0020_Tid',        // "Dato og Tid"
-      'DatoOgTid',
-      'DatoTid',
-      'EventDate',
-    ];
-    for (const key of candidates) {
-      if (item[key]) {
-        const d = new Date(spVal(item[key]));
-        if (!isNaN(d)) {
-          _dateFieldName = key;
-          console.log('Fant dato-felt:', key);
-          return d;
-        }
-      }
-    }
-    // Last resort: scan ALL fields for anything that looks like a recent date
-    for (const key of Object.keys(item)) {
-      const val = spVal(item[key]);
-      if (val && val.match(/^2\d{3}-/)) {
-        const d = new Date(val);
-        if (!isNaN(d) && d.getFullYear() >= 2020) {
-          // Prefer fields named with "dato", "tid", "date", "time"
-          const kl = key.toLowerCase();
-          if (kl.includes('dato') || kl.includes('tid') || kl.includes('date') || kl.includes('time')) {
-            _dateFieldName = key;
-            console.log('Fant dato-felt via scan:', key, '=', val);
-            return d;
-          }
-        }
-      }
-    }
-    // Ultimate fallback: Modified then Created
+    // Fallback: Modified then Created
     const fb = item['Modified'] || item['Created'];
     return fb ? new Date(spVal(fb)) : new Date(0);
   }
@@ -1004,11 +967,6 @@ async function loadData(isInitial=false) {
 
     lastSuccessTime=new Date();
     setOffline(false);
-    // DEBUG: log all field names from first journal item so we can find "Dato & Tid"
-    if((data.journal||[]).length>0) {
-      console.log('=== JOURNAL FELT (første rad) ===');
-      Object.keys(data.journal[0]).forEach(k => console.log(k, ':', data.journal[0][k]));
-    }
     renderDrift(data.drift||[]);
     renderJournal(data.journal||[]);
     isFirstRender=false;

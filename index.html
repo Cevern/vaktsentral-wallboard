@@ -129,13 +129,17 @@
   }
 
   /* LAYOUT */
-  .main { display:grid; grid-template-columns:44px 1fr 250px 1.6fr; flex:1; overflow:hidden; }
+  .main { display:grid; grid-template-columns:250px 1fr 1.6fr; grid-template-rows:1fr 44px; flex:1; overflow:hidden; }
 
-  .statusbar-left { display:flex; flex-direction:column; align-items:center; justify-content:space-between; padding:14px 0; background:#050a10; border-right:1px solid var(--border); }
-  .sb-top,.sb-bot { display:flex; flex-direction:column; align-items:center; width:100%; }
-  .sb-item { display:flex; flex-direction:column; align-items:center; gap:4px; width:100%; padding:10px 0; border-bottom:1px solid var(--border); }
-  .sb-item:last-child { border-bottom:none; }
-  .sb-dot { width:8px; height:8px; border-radius:50%; }
+  .statusbar-bottom { 
+    display:flex; flex-direction:row; align-items:center; justify-content:space-between;
+    padding:0 16px; background:#050a10; border-top:1px solid var(--border);
+    grid-column:1 / -1;
+  }
+  .sb-row { display:flex; align-items:center; gap:20px; }
+  .sb-item { display:flex; align-items:center; gap:6px; padding:0 12px; border-right:1px solid var(--border); }
+  .sb-item:last-child { border-right:none; }
+  .sb-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
   .sb-dot.green  { background:var(--aktiv); box-shadow:0 0 6px var(--aktiv); animation:pulse-dot 2s ease-in-out infinite; }
   .sb-dot.red    { background:var(--kritisk); box-shadow:0 0 6px var(--kritisk); }
   .sb-dot.yellow { background:var(--viktig); }
@@ -145,7 +149,7 @@
   .sb-num.danger { color:var(--kritisk); }
   .sb-num.warn   { color:var(--viktig); }
   .sb-num.ok     { color:var(--aktiv); }
-  .sb-label { font-size:7px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); writing-mode:vertical-rl; transform:rotate(180deg); line-height:1; white-space:nowrap; }
+  .sb-label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); white-space:nowrap; }
 
   .panel { display:flex; flex-direction:column; overflow:hidden; border-right:1px solid var(--border); }
   .panel:last-child { border-right:none; }
@@ -394,53 +398,6 @@
 <!-- MAIN -->
 <div class="main">
 
-  <!-- LEFT STATUS SIDEBAR -->
-  <div class="statusbar-left">
-    <div class="sb-top">
-      <div class="sb-item">
-        <div class="sb-dot green"></div>
-        <div class="sb-label">Online</div>
-      </div>
-      <div class="sb-item">
-        <div class="sb-dot red" id="sbDotKritisk"></div>
-        <div class="sb-num danger" id="sbKritisk">0</div>
-        <div class="sb-label">Kritisk</div>
-      </div>
-      <div class="sb-item">
-        <div class="sb-dot yellow"></div>
-        <div class="sb-num warn" id="sbViktig">0</div>
-        <div class="sb-label">Viktig</div>
-      </div>
-      <div class="sb-item">
-        <div class="sb-dot blue"></div>
-        <div class="sb-num" id="sbInfo">0</div>
-        <div class="sb-label">Info</div>
-      </div>
-    </div>
-    <div class="sb-bot">
-      <div class="sb-item">
-        <div class="sb-num ok" id="sbJournalToday">0</div>
-        <div class="sb-label">I dag</div>
-      </div>
-      <div class="sb-item">
-        <div class="sb-dot dim"></div>
-        <div class="sb-label">Totalt</div>
-        <div class="sb-num" id="sbTotal" style="font-size:11px">–</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- DRIFTMELDINGER -->
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title"><span>📡</span> Driftmeldinger</div>
-      <div class="panel-count" id="driftCount">– aktive</div>
-    </div>
-    <div class="panel-body" id="driftBody">
-      <div class="empty-state"><div class="icon">📡</div><div class="text">Laster meldinger...</div></div>
-    </div>
-  </div>
-
   <!-- STATS -->
   <div class="stats-panel">
     <div class="panel-header">
@@ -488,6 +445,17 @@
     </div>
   </div>
 
+  <!-- DRIFTMELDINGER -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title"><span>📡</span> Driftmeldinger</div>
+      <div class="panel-count" id="driftCount">– aktive</div>
+    </div>
+    <div class="panel-body" id="driftBody">
+      <div class="empty-state"><div class="icon">📡</div><div class="text">Laster meldinger...</div></div>
+    </div>
+  </div>
+
   <!-- JOURNAL -->
   <div class="panel">
     <div class="panel-header">
@@ -496,6 +464,42 @@
     </div>
     <div class="panel-body" id="journalBody">
       <div class="empty-state"><div class="icon">📋</div><div class="text">Laster journal...</div></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM STATUS BAR -->
+  <div class="statusbar-bottom">
+    <div class="sb-row">
+      <div class="sb-item">
+        <div class="sb-dot green"></div>
+        <div class="sb-label">Online</div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-dot red" id="sbDotKritisk"></div>
+        <div class="sb-num danger" id="sbKritisk">0</div>
+        <div class="sb-label">Kritisk</div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-dot yellow"></div>
+        <div class="sb-num warn" id="sbViktig">0</div>
+        <div class="sb-label">Viktig</div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-dot blue"></div>
+        <div class="sb-num" id="sbInfo">0</div>
+        <div class="sb-label">Info</div>
+      </div>
+    </div>
+    <div class="sb-row">
+      <div class="sb-item">
+        <div class="sb-num ok" id="sbJournalToday">0</div>
+        <div class="sb-label">Journal i dag</div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-dot dim"></div>
+        <div class="sb-num" id="sbTotal" style="font-size:11px">–</div>
+        <div class="sb-label">Totalt</div>
+      </div>
     </div>
   </div>
 
@@ -736,11 +740,11 @@ document.addEventListener('mousemove',()=>{
 
 // ═══ ANTI-BURN ════════════════════════════════════════════
 let burnIdx=0;
-const burnShifts=['','shift-1','shift-2','shift-3','shift-4'];
+const burnShifts=['shift-1','shift-2','shift-3','shift-4'];
 setInterval(()=>{
   document.body.classList.remove(...burnShifts);
   burnIdx=(burnIdx+1)%burnShifts.length;
-  if(burnIdx>0) document.body.classList.add(burnShifts[burnIdx]);
+  document.body.classList.add(burnShifts[burnIdx]);
 },60000);
 
 // ═══ AUTO-SCROLL ══════════════════════════════════════════

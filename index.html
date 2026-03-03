@@ -813,9 +813,6 @@ function renderDrift(items) {
   const nI=aktive.filter(i=>spVal(i.Viktighetsgrad).toLowerCase()==='info').length;
 
   document.getElementById('driftCount').textContent=`${aktive.length} aktive`;
-  document.getElementById('kritiskNum').textContent=nK;
-  document.getElementById('viktigNum').textContent=nV;
-  document.getElementById('infoNum').textContent=nI;
   document.getElementById('s_kritisk').textContent=nK;
   document.getElementById('sbKritisk').textContent=nK;
   document.getElementById('sbViktig').textContent=nV;
@@ -873,37 +870,62 @@ function renderJournal(items) {
   if(!Array.isArray(items)) items=[];
 
   document.getElementById('journalCount').textContent=`${Math.min(items.length,20)} av ${items.length}`;
-  document.getElementById('totalJournalBar').textContent=items.length;
   document.getElementById('totalCount').textContent=items.length;
   const sbTotal=document.getElementById('sbTotal'); if(sbTotal) sbTotal.textContent=items.length;
 
   const today=new Date().toDateString();
-  const todayCnt=items.filter(i=>new Date(i.Created||0).toDateString()===today).length;
+  const todayCnt=items.filter(i=>getItemDate(i).toDateString()===today).length;
   document.getElementById('statJournalToday').textContent=todayCnt;
   const sbJT=document.getElementById('sbJournalToday'); if(sbJT) sbJT.textContent=todayCnt;
 
   if(items.length===0){body.innerHTML=`<div class="empty-state"><div class="icon">📋</div><div class="text">Ingen hendelser logget</div></div>`;return;}
 
-  // Helper: get the "Dato & Tid" field - try all possible internal SP column name variants
+  // Helper: get the "Dato & Tid" field
+  // Logs all keys on first call so we can identify the exact field name
+  let _dateFieldName = null;
   function getItemDate(item) {
+    // If we already found the field name, use it directly
+    if (_dateFieldName && item[_dateFieldName]) {
+      const d = new Date(spVal(item[_dateFieldName]));
+      if (!isNaN(d)) return d;
+    }
+    // Try all known variants of "Dato & Tid" SP internal names
     const candidates = [
-      item['Dato_x0020__x0026__x0020_Tid'],   // SP internal for "Dato & Tid"
-      item['DatoOgTid'],
-      item['Dato_og_Tid'],
-      item['DatoTid'],
-      item['Dato_x0020_og_x0020_Tid'],
-      item['EventDate'],
-      item['DatoVisning'],
-      item['Modified'],
-      item['Created'],
+      'Dato_x0020__x0026__x0020_Tid',  // "Dato & Tid" standard SP encoding
+      'Dato_x0020_og_x0020_Tid',        // "Dato og Tid"
+      'DatoOgTid',
+      'DatoTid',
+      'EventDate',
     ];
-    for (const c of candidates) {
-      if (c) {
-        const d = new Date(spVal(c));
-        if (!isNaN(d)) return d;
+    for (const key of candidates) {
+      if (item[key]) {
+        const d = new Date(spVal(item[key]));
+        if (!isNaN(d)) {
+          _dateFieldName = key;
+          console.log('Fant dato-felt:', key);
+          return d;
+        }
       }
     }
-    return new Date(0);
+    // Last resort: scan ALL fields for anything that looks like a recent date
+    for (const key of Object.keys(item)) {
+      const val = spVal(item[key]);
+      if (val && val.match(/^2\d{3}-/)) {
+        const d = new Date(val);
+        if (!isNaN(d) && d.getFullYear() >= 2020) {
+          // Prefer fields named with "dato", "tid", "date", "time"
+          const kl = key.toLowerCase();
+          if (kl.includes('dato') || kl.includes('tid') || kl.includes('date') || kl.includes('time')) {
+            _dateFieldName = key;
+            console.log('Fant dato-felt via scan:', key, '=', val);
+            return d;
+          }
+        }
+      }
+    }
+    // Ultimate fallback: Modified then Created
+    const fb = item['Modified'] || item['Created'];
+    return fb ? new Date(spVal(fb)) : new Date(0);
   }
 
   const sorted=[...items].sort((a,b)=>getItemDate(b)-getItemDate(a)).slice(0,20);

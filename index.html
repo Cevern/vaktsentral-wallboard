@@ -793,7 +793,7 @@ function renderJournal(items) {
   const body=document.getElementById('journalBody');
   if(!Array.isArray(items)) items=[];
 
-  document.getElementById('journalCount').textContent=`${Math.min(items.length,40)} av ${items.length}`;
+  document.getElementById('journalCount').textContent=`${Math.min(items.length,20)} av ${items.length}`;
   document.getElementById('totalJournalBar').textContent=items.length;
   document.getElementById('totalCount').textContent=items.length;
 
@@ -802,7 +802,7 @@ function renderJournal(items) {
 
   if(items.length===0){body.innerHTML=`<div class="empty-state"><div class="icon">📋</div><div class="text">Ingen hendelser logget</div></div>`;return;}
 
-  const sorted=[...items].sort((a,b)=>new Date(b.Created||0)-new Date(a.Created||0)).slice(0,40);
+  const sorted=[...items].sort((a,b)=>new Date(b.Created||0)-new Date(a.Created||0)).slice(0,20);
 
   const newestId=sorted[0]?.ID||sorted[0]?.Id||sorted[0]?.id;
   const isNew=!isFirstRender && lastJournalId!==null && newestId!==lastJournalId;
@@ -829,7 +829,7 @@ function renderJournal(items) {
     const spesifik=spVal(item.SpesifikasjonJournalLooku)||spVal(item['SpesifikasjonJournalLooku.lookupValue']);
     const tjnr=spVal(item.Tjenestenummer), besk=spVal(item.Beskrivelse);
     const tiltak=spVal(item.Tiltakutf_x00f8_rt), status=spVal(item.Status);
-    const dato=spVal(item.DatoVisning)||formatTime(item.Created);
+    const dato=formatTime(item.Created)||spVal(item.DatoVisning);
     const isK=status.toLowerCase().includes('kritisk'), isS=status.toLowerCase().includes('service');
     const isUtfort=status.toLowerCase().includes('utf'), hasTiltak=tiltak.length>0;
     const zebraClass=idx%2===1?' zebra':'';

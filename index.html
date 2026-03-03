@@ -128,8 +128,24 @@
     50%      { background:rgba(255,40,40,0.22); }
   }
 
-  /* 3-COLUMN LAYOUT */
-  .main { display:grid; grid-template-columns:1fr 250px 1.6fr; flex:1; overflow:hidden; }
+  /* LAYOUT */
+  .main { display:grid; grid-template-columns:44px 1fr 250px 1.6fr; flex:1; overflow:hidden; }
+
+  .statusbar-left { display:flex; flex-direction:column; align-items:center; justify-content:space-between; padding:14px 0; background:#050a10; border-right:1px solid var(--border); }
+  .sb-top,.sb-bot { display:flex; flex-direction:column; align-items:center; width:100%; }
+  .sb-item { display:flex; flex-direction:column; align-items:center; gap:4px; width:100%; padding:10px 0; border-bottom:1px solid var(--border); }
+  .sb-item:last-child { border-bottom:none; }
+  .sb-dot { width:8px; height:8px; border-radius:50%; }
+  .sb-dot.green  { background:var(--aktiv); box-shadow:0 0 6px var(--aktiv); animation:pulse-dot 2s ease-in-out infinite; }
+  .sb-dot.red    { background:var(--kritisk); box-shadow:0 0 6px var(--kritisk); }
+  .sb-dot.yellow { background:var(--viktig); }
+  .sb-dot.blue   { background:var(--info); }
+  .sb-dot.dim    { background:var(--text-dim); }
+  .sb-num { font-family:'Share Tech Mono',monospace; font-size:14px; font-weight:700; color:var(--text-primary); line-height:1; }
+  .sb-num.danger { color:var(--kritisk); }
+  .sb-num.warn   { color:var(--viktig); }
+  .sb-num.ok     { color:var(--aktiv); }
+  .sb-label { font-size:7px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); writing-mode:vertical-rl; transform:rotate(180deg); line-height:1; white-space:nowrap; }
 
   .panel { display:flex; flex-direction:column; overflow:hidden; border-right:1px solid var(--border); }
   .panel:last-child { border-right:none; }
@@ -229,7 +245,7 @@
   .badge.info    { background:rgba(45,139,255,0.18); color:#7fb4ff; }
 
   .card-chips { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:7px; }
-  .chip { font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; background:rgba(255,255,255,0.07); color:#8fafc8; }
+  .chip { font-size:11px; font-weight:700; padding:2px 7px; border-radius:4px; background:rgba(255,255,255,0.07); color:#8fafc8; }
   .chip.type-inspeksjon     { color:#f5a623; background:rgba(245,166,35,0.12); }
   .chip.type-observasjon    { color:#2d8bff; background:rgba(45,139,255,0.12); }
   .chip.type-telefon        { color:#aa44ff; background:rgba(170,68,255,0.12); }
@@ -260,39 +276,32 @@
   .date-sep-label { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim); white-space:nowrap; }
 
   .journal-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:5px; }
-  .journal-title { font-size:13px; font-weight:800; color:#fff; flex:1; }
-  .journal-time  { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-secondary); white-space:nowrap; flex-shrink:0; }
+  .journal-title { font-size:15px; font-weight:800; color:#fff; flex:1; }
+  .journal-time  { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--text-secondary); white-space:nowrap; flex-shrink:0; }
   .journal-meta  { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:5px; }
-  .journal-body  { font-size:11px; color:#9ab5cc; line-height:1.45; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-  .journal-tiltak { font-size:10px; color:#6dcc8f; line-height:1.4; margin-top:5px; padding-top:5px; border-top:1px solid rgba(255,255,255,0.05); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-  .journal-tiltak-label { font-size:8px; font-weight:900; letter-spacing:0.8px; text-transform:uppercase; color:#4a9e6a; margin-bottom:2px; }
-  .journal-no-tiltak { font-size:10px; color:#e05a5a; font-style:italic; margin-top:5px; padding-top:5px; border-top:1px solid rgba(255,255,255,0.05); }
+  .journal-body  { font-size:13px; color:#9ab5cc; line-height:1.45; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .journal-tiltak { font-size:12px; color:#6dcc8f; line-height:1.4; margin-top:5px; padding-top:5px; border-top:1px solid rgba(255,255,255,0.05); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .journal-tiltak-label { font-size:10px; font-weight:900; letter-spacing:0.8px; text-transform:uppercase; color:#4a9e6a; margin-bottom:2px; }
+  .journal-no-tiltak { font-size:12px; color:#e05a5a; font-style:italic; margin-top:5px; padding-top:5px; border-top:1px solid rgba(255,255,255,0.05); }
 
   /* Typewriter */
   .typewriter { overflow:hidden; white-space:nowrap; border-right:2px solid var(--aktiv); }
   .typewriter.done { border-right:none; white-space:normal; }
 
-  .status-pill { font-size:8px; font-weight:800; padding:2px 7px; border-radius:999px; letter-spacing:0.4px; }
+  .status-pill { font-size:10px; font-weight:800; padding:2px 7px; border-radius:999px; letter-spacing:0.4px; }
   .status-pill.utfort       { background:rgba(74,158,106,0.2); color:#6dcc8f; border:1px solid rgba(74,158,106,0.4); }
   .status-pill.kritisk-pill { background:rgba(255,59,59,0.25); color:#ff6b6b; border:1px solid rgba(255,59,59,0.5); }
   .status-pill.service      { background:rgba(245,166,35,0.2); color:#ffd08a; border:1px solid rgba(245,166,35,0.4); }
   .status-pill.default      { background:rgba(45,139,255,0.15); color:#7fb4ff; border:1px solid rgba(45,139,255,0.3); }
 
-  .tjenestenummer { display:flex; align-items:center; gap:3px; background:rgba(255,255,255,0.05); padding:2px 7px; border-radius:999px; font-size:10px; color:#c0d4e8; font-weight:800; }
+  .tjenestenummer { display:flex; align-items:center; gap:3px; background:rgba(255,255,255,0.05); padding:2px 7px; border-radius:999px; font-size:12px; color:#c0d4e8; font-weight:800; }
 
   /* EMPTY STATE */
   .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:8px; color:var(--text-dim); }
   .empty-state .icon { font-size:28px; opacity:0.4; }
   .empty-state .text { font-size:12px; letter-spacing:1px; text-transform:uppercase; }
 
-  /* STATUS BAR */
-  .statusbar { height:26px; background:#050a10; border-top:1px solid var(--border); display:flex; align-items:center; padding:0 18px; gap:20px; flex-shrink:0; }
-  .status-item { display:flex; align-items:center; gap:5px; font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim); letter-spacing:0.5px; }
-  .status-dot { width:5px; height:5px; border-radius:50%; }
-  .status-dot.green  { background:var(--aktiv); box-shadow:0 0 5px var(--aktiv); }
-  .status-dot.red    { background:var(--kritisk); }
-  .status-dot.yellow { background:var(--viktig); }
-  .status-dot.blue   { background:var(--info); }
+
 
   /* CONFIG */
   .config-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); display:flex; align-items:center; justify-content:center; z-index:100; backdrop-filter:blur(6px); transition:opacity 0.3s; }
@@ -385,6 +394,42 @@
 <!-- MAIN -->
 <div class="main">
 
+  <!-- LEFT STATUS SIDEBAR -->
+  <div class="statusbar-left">
+    <div class="sb-top">
+      <div class="sb-item">
+        <div class="sb-dot green"></div>
+        <div class="sb-label">Online</div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-dot red" id="sbDotKritisk"></div>
+        <div class="sb-num danger" id="sbKritisk">0</div>
+        <div class="sb-label">Kritisk</div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-dot yellow"></div>
+        <div class="sb-num warn" id="sbViktig">0</div>
+        <div class="sb-label">Viktig</div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-dot blue"></div>
+        <div class="sb-num" id="sbInfo">0</div>
+        <div class="sb-label">Info</div>
+      </div>
+    </div>
+    <div class="sb-bot">
+      <div class="sb-item">
+        <div class="sb-num ok" id="sbJournalToday">0</div>
+        <div class="sb-label">I dag</div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-dot dim"></div>
+        <div class="sb-label">Totalt</div>
+        <div class="sb-num" id="sbTotal" style="font-size:11px">–</div>
+      </div>
+    </div>
+  </div>
+
   <!-- DRIFTMELDINGER -->
   <div class="panel">
     <div class="panel-header">
@@ -456,14 +501,7 @@
 
 </div>
 
-<!-- STATUS BAR -->
-<div class="statusbar">
-  <div class="status-item"><div class="status-dot green"></div>SYSTEM ONLINE</div>
-  <div class="status-item"><div class="status-dot red"></div><span id="kritiskNum">0</span> KRITISK</div>
-  <div class="status-item"><div class="status-dot yellow"></div><span id="viktigNum">0</span> VIKTIG</div>
-  <div class="status-item"><div class="status-dot blue"></div><span id="infoNum">0</span> INFO</div>
-  <div class="status-item" style="margin-left:auto">TOTALT JOURNAL: <span id="totalJournalBar" style="margin-left:4px">–</span></div>
-</div>
+
 
 <script>
 // ═══ HELPERS ═══════════════════════════════════════════════
@@ -559,21 +597,57 @@ function getEaster(y) {
 }
 
 // ═══ VAKTSKIFTE ════════════════════════════════════════════
-const VAKTER=[6,14,22];
+// Hverdag (man-fre): 08:00-15:30, 15:30-23:00, 23:00-08:00
+// Helg (lør-søn):   08:00-20:00, 20:00-08:00
+function getShiftTimes(date) {
+  const day = date.getDay(); // 0=søn, 6=lør
+  const isWeekend = (day === 0 || day === 6);
+  if (isWeekend) {
+    return [[8,0],[20,0]];
+  } else {
+    return [[8,0],[15,30],[23,0]];
+  }
+}
+
 function getNextVaktskifte() {
-  const now=new Date(), h=now.getHours()+now.getMinutes()/60;
-  let nextH=VAKTER.find(v=>v>h);
-  const nextDate=new Date(now);
-  if(nextH===undefined){nextH=VAKTER[0];nextDate.setDate(nextDate.getDate()+1);}
-  nextDate.setHours(nextH,0,0,0);
-  let prevH=null;
-  for(let i=VAKTER.length-1;i>=0;i--){if(VAKTER[i]<=h){prevH=VAKTER[i];break;}}
-  const prevDate=new Date(now);
-  if(prevH===null){prevH=VAKTER[VAKTER.length-1];prevDate.setDate(prevDate.getDate()-1);}
-  prevDate.setHours(prevH,0,0,0);
-  const progress=Math.min(100,((now-prevDate)/(nextDate-prevDate))*100);
-  const ms=nextDate-now, ho=Math.floor(ms/3600000), mi=Math.floor((ms%3600000)/60000);
-  return {label:`${String(nextH).padStart(2,'0')}:00`, countdown:ho>0?`${ho}t ${mi}m`:`${mi}m`, progress};
+  const now = new Date();
+  const nowMins = now.getHours()*60 + now.getMinutes();
+  const shifts = getShiftTimes(now);
+
+  // Convert shifts to minutes
+  const shiftMins = shifts.map(s => s[0]*60 + s[1]);
+
+  // Find next shift
+  let nextMins = shiftMins.find(m => m > nowMins);
+  let prevMins;
+  let nextDate = new Date(now);
+
+  if (nextMins !== undefined) {
+    prevMins = [...shiftMins].reverse().find(m => m <= nowMins) ?? shiftMins[shiftMins.length-1];
+  } else {
+    // Next shift is 08:00 tomorrow
+    nextMins = 8*60;
+    prevMins = shiftMins[shiftMins.length-1];
+    nextDate.setDate(nextDate.getDate()+1);
+  }
+
+  nextDate.setHours(Math.floor(nextMins/60), nextMins%60, 0, 0);
+
+  const prevDate = new Date(now);
+  if (prevMins > nowMins) prevDate.setDate(prevDate.getDate()-1);
+  prevDate.setHours(Math.floor(prevMins/60), prevMins%60, 0, 0);
+
+  const progress = Math.min(100, ((now-prevDate)/(nextDate-prevDate))*100);
+  const ms = nextDate - now;
+  const ho = Math.floor(ms/3600000);
+  const mi = Math.floor((ms%3600000)/60000);
+
+  const h = Math.floor(nextMins/60), m = nextMins%60;
+  return {
+    label: `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
+    countdown: ho > 0 ? `${ho}t ${mi}m` : `${mi}m`,
+    progress
+  };
 }
 
 // ═══ SOUND ════════════════════════════════════════════════
@@ -743,6 +817,11 @@ function renderDrift(items) {
   document.getElementById('viktigNum').textContent=nV;
   document.getElementById('infoNum').textContent=nI;
   document.getElementById('s_kritisk').textContent=nK;
+  document.getElementById('sbKritisk').textContent=nK;
+  document.getElementById('sbViktig').textContent=nV;
+  document.getElementById('sbInfo').textContent=nI;
+  const sbDot=document.getElementById('sbDotKritisk');
+  if(sbDot) sbDot.style.boxShadow=nK>0?'0 0 8px var(--kritisk)':'none';
   document.getElementById('s_viktig').textContent=nV;
   document.getElementById('s_info').textContent=nI;
 
@@ -796,9 +875,12 @@ function renderJournal(items) {
   document.getElementById('journalCount').textContent=`${Math.min(items.length,20)} av ${items.length}`;
   document.getElementById('totalJournalBar').textContent=items.length;
   document.getElementById('totalCount').textContent=items.length;
+  const sbTotal=document.getElementById('sbTotal'); if(sbTotal) sbTotal.textContent=items.length;
 
   const today=new Date().toDateString();
-  document.getElementById('statJournalToday').textContent=items.filter(i=>new Date(i.Created||0).toDateString()===today).length;
+  const todayCnt=items.filter(i=>new Date(i.Created||0).toDateString()===today).length;
+  document.getElementById('statJournalToday').textContent=todayCnt;
+  const sbJT=document.getElementById('sbJournalToday'); if(sbJT) sbJT.textContent=todayCnt;
 
   if(items.length===0){body.innerHTML=`<div class="empty-state"><div class="icon">📋</div><div class="text">Ingen hendelser logget</div></div>`;return;}
 

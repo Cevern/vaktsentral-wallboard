@@ -884,18 +884,44 @@ function renderJournal(items) {
 
   if(items.length===0){body.innerHTML=`<div class="empty-state"><div class="icon">📋</div><div class="text">Ingen hendelser logget</div></div>`;return;}
 
-  const sorted=[...items].sort((a,b)=>new Date(b.Created||0)-new Date(a.Created||0)).slice(0,20);
+  // Helper: get the "Dato & Tid" field - try all possible internal SP column name variants
+  function getItemDate(item) {
+    const candidates = [
+      item['Dato_x0020__x0026__x0020_Tid'],   // SP internal for "Dato & Tid"
+      item['DatoOgTid'],
+      item['Dato_og_Tid'],
+      item['DatoTid'],
+      item['Dato_x0020_og_x0020_Tid'],
+      item['EventDate'],
+      item['DatoVisning'],
+      item['Modified'],
+      item['Created'],
+    ];
+    for (const c of candidates) {
+      if (c) {
+        const d = new Date(spVal(c));
+        if (!isNaN(d)) return d;
+      }
+    }
+    return new Date(0);
+  }
+
+  const sorted=[...items].sort((a,b)=>getItemDate(b)-getItemDate(a)).slice(0,20);
 
   const newestId=sorted[0]?.ID||sorted[0]?.Id||sorted[0]?.id;
   const isNew=!isFirstRender && lastJournalId!==null && newestId!==lastJournalId;
   if(isNew) playAlert();
-  if(sorted[0]?.Created) { lastJournalCreated=sorted[0].Created; document.getElementById('sisteHendelse').textContent=timeAgo(sorted[0].Created); }
+  if(sorted[0]) { 
+    const newestDate = getItemDate(sorted[0]);
+    lastJournalCreated = newestDate.toISOString();
+    document.getElementById('sisteHendelse').textContent=timeAgo(newestDate.toISOString()); 
+  }
 
   // Date groups
   const groups=[];
   let lastLabel=null;
   sorted.forEach((item,idx)=>{
-    const d=new Date(item.Created||0), now=new Date();
+    const d=getItemDate(item), now=new Date();
     let label;
     if(d.toDateString()===now.toDateString()) label='I DAG';
     else { const y=new Date();y.setDate(y.getDate()-1); label=d.toDateString()===y.toDateString()?'I GÅR':d.toLocaleDateString('no-NO',{weekday:'short',day:'numeric',month:'short'}).toUpperCase(); }
@@ -911,7 +937,7 @@ function renderJournal(items) {
     const spesifik=spVal(item.SpesifikasjonJournalLooku)||spVal(item['SpesifikasjonJournalLooku.lookupValue']);
     const tjnr=spVal(item.Tjenestenummer), besk=spVal(item.Beskrivelse);
     const tiltak=spVal(item.Tiltakutf_x00f8_rt), status=spVal(item.Status);
-    const dato=formatTime(item.Created)||spVal(item.DatoVisning);
+    const dato=formatTime(getItemDate(item).toISOString());
     const isK=status.toLowerCase().includes('kritisk'), isS=status.toLowerCase().includes('service');
     const isUtfort=status.toLowerCase().includes('utf'), hasTiltak=tiltak.length>0;
     const zebraClass=idx%2===1?' zebra':'';
@@ -956,6 +982,11 @@ async function loadData(isInitial=false) {
 
     lastSuccessTime=new Date();
     setOffline(false);
+    // DEBUG: log all field names from first journal item so we can find "Dato & Tid"
+    if((data.journal||[]).length>0) {
+      console.log('=== JOURNAL FELT (første rad) ===');
+      Object.keys(data.journal[0]).forEach(k => console.log(k, ':', data.journal[0][k]));
+    }
     renderDrift(data.drift||[]);
     renderJournal(data.journal||[]);
     isFirstRender=false;

@@ -864,6 +864,16 @@ function renderDrift(items) {
   }).join('');
 }
 
+// ═══ GET ITEM DATE ═════════════════════════════════════════
+function getItemDate(item) {
+  if (item.DatoTid) {
+    const d = new Date(item.DatoTid);
+    if (!isNaN(d)) return d;
+  }
+  const fb = item['Modified'] || item['Created'];
+  return fb ? new Date(spVal(fb)) : new Date(0);
+}
+
 // ═══ RENDER JOURNAL ════════════════════════════════════════
 function renderJournal(items) {
   const body=document.getElementById('journalBody');
@@ -879,17 +889,6 @@ function renderJournal(items) {
   const sbJT=document.getElementById('sbJournalToday'); if(sbJT) sbJT.textContent=todayCnt;
 
   if(items.length===0){body.innerHTML=`<div class="empty-state"><div class="icon">📋</div><div class="text">Ingen hendelser logget</div></div>`;return;}
-
-  // Helper: get the "DatoTid" field (confirmed SharePoint internal name)
-  function getItemDate(item) {
-    if (item.DatoTid) {
-      const d = new Date(item.DatoTid);
-      if (!isNaN(d)) return d;
-    }
-    // Fallback: Modified then Created
-    const fb = item['Modified'] || item['Created'];
-    return fb ? new Date(spVal(fb)) : new Date(0);
-  }
 
   const sorted=[...items].sort((a,b)=>getItemDate(b)-getItemDate(a)).slice(0,20);
 

@@ -672,7 +672,6 @@ function playAlert() {
 let apiUrl='', refreshInterval=null, countdownSec=30, countdownInterval=null;
 let lastSuccessTime=null, isOffline=false;
 let lastKritiskIds=new Set(), lastJournalId=null, lastJournalCreated=null;
-let autoScrollInterval=null, autoScrollDir=1;
 let isFirstRender=true;
 
 // ═══ CLOCK + META ══════════════════════════════════════════
@@ -746,29 +745,6 @@ setInterval(()=>{
   burnIdx=(burnIdx+1)%burnShifts.length;
   document.body.classList.add(burnShifts[burnIdx]);
 },60000);
-
-// ═══ AUTO-SCROLL ══════════════════════════════════════════
-function startAutoScroll() {
-  clearInterval(autoScrollInterval);
-  const body=document.getElementById('journalBody');
-  autoScrollInterval=setInterval(()=>{
-    if(!body) return;
-    const max=body.scrollHeight-body.clientHeight;
-    if(max<=0) return;
-    body.scrollTop+=autoScrollDir*1;
-    if(body.scrollTop>=max){autoScrollDir=-1;setTimeout(()=>{autoScrollDir=1;},2500);}
-    if(body.scrollTop<=0) autoScrollDir=1;
-  },40);
-}
-
-// Pause on hover
-setTimeout(()=>{
-  const jb=document.getElementById('journalBody');
-  if(jb){
-    jb.addEventListener('mouseenter',()=>clearInterval(autoScrollInterval));
-    jb.addEventListener('mouseleave',()=>startAutoScroll());
-  }
-},1000);
 
 // ═══ MIDNIGHT RELOAD ══════════════════════════════════════
 function scheduleMidnightReload() {
@@ -950,7 +926,6 @@ function renderJournal(items) {
     const firstCard=body.querySelector('.journal-card');
     if(firstCard){const titleEl=firstCard.querySelector('.journal-title');if(titleEl){const txt=titleEl.textContent;typewriterEffect(titleEl,txt);}}
     body.scrollTop=0;
-    setTimeout(()=>startAutoScroll(),4000);
   }
 
   lastJournalId=newestId;
@@ -983,7 +958,6 @@ async function loadData(isInitial=false) {
       clearInterval(refreshInterval);
       refreshInterval=setInterval(()=>loadData(false),30000);
       startCountdown();
-      startAutoScroll();
     }
   } catch(err) {
     console.error('Fetch error:',err);

@@ -8,529 +8,449 @@
 <style>
   :root {
     --bg: #060b12;
-    --bg-panel: #0a1018;
     --bg-card: #0d1520;
     --border: rgba(255,255,255,0.07);
     --kritisk: #ff2828;
-    --kritisk-glow: rgba(255,40,40,0.20);
     --viktig: #f5a623;
-    --viktig-glow: rgba(245,166,35,0.15);
     --info: #2d8bff;
-    --info-glow: rgba(45,139,255,0.12);
     --aktiv: #00d4aa;
     --text-primary: #eef4fb;
     --text-secondary: #7a9bb5;
     --text-dim: #3d5568;
-    --accent-line: rgba(45,139,255,0.3);
   }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
+  * { margin:0; padding:0; box-sizing:border-box; }
   body {
-    background: var(--bg);
-    color: var(--text-primary);
-    font-family: 'Barlow', sans-serif;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    background:var(--bg); color:var(--text-primary);
+    font-family:'Barlow',sans-serif;
+    height:100vh; overflow:hidden;
+    display:flex; flex-direction:column;
   }
 
+  /* OFFLINE BANNER */
+  .offline-banner {
+    display:none; align-items:center; justify-content:center;
+    gap:10px; padding:6px 20px;
+    background:rgba(255,40,40,0.18); border-bottom:1px solid rgba(255,40,40,0.4);
+    font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:900;
+    letter-spacing:1.5px; color:#ff6060; text-transform:uppercase;
+    flex-shrink:0; animation:banner-pulse 1.5s ease-in-out infinite;
+  }
+  .offline-banner.visible { display:flex; }
+
+  /* TOP BAR */
   .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 28px;
-    height: 52px;
-    background: #070d14;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 22px; height:66px;
+    background:#070d14; border-bottom:1px solid var(--border);
+    flex-shrink:0; position:relative;
   }
+  .topbar-left { display:flex; align-items:center; gap:14px; }
 
-  .topbar-left { display: flex; align-items: center; gap: 14px; }
-
+  .logo-wrap {
+    position:relative; width:22px; height:22px;
+    display:flex; align-items:center; justify-content:center;
+  }
   .logo-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--aktiv);
-    box-shadow: 0 0 8px var(--aktiv);
-    animation: pulse-dot 2s ease-in-out infinite;
+    width:10px; height:10px; border-radius:50%;
+    background:var(--aktiv); box-shadow:0 0 8px var(--aktiv);
+    animation:pulse-dot 2s ease-in-out infinite; position:relative; z-index:2;
   }
-
   @keyframes pulse-dot {
-    0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--aktiv); }
-    50% { opacity: 0.5; box-shadow: 0 0 3px var(--aktiv); }
+    0%,100% { opacity:1; box-shadow:0 0 8px var(--aktiv); }
+    50%      { opacity:0.5; box-shadow:0 0 3px var(--aktiv); }
+  }
+  .radar-ring {
+    position:absolute; border-radius:50%;
+    border:1.5px solid var(--aktiv); opacity:0; pointer-events:none;
+  }
+  .radar-ring.active { animation:radar-expand 0.9s ease-out forwards; }
+  @keyframes radar-expand {
+    0%   { width:10px; height:10px; opacity:0.9; }
+    100% { width:44px; height:44px; opacity:0; }
   }
 
+  .topbar-branding { display:flex; flex-direction:column; }
   .topbar-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 18px; font-weight: 900;
-    letter-spacing: 2.5px; text-transform: uppercase;
-    color: var(--text-primary);
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:22px; font-weight:900;
+    letter-spacing:3px; text-transform:uppercase; color:var(--text-primary); line-height:1.1;
   }
+  .topbar-subtitle { font-size:11px; color:var(--text-secondary); letter-spacing:1.5px; text-transform:uppercase; }
 
-  .topbar-subtitle {
-    font-size: 12px; color: var(--text-secondary);
-    letter-spacing: 1px; text-transform: uppercase;
+  /* Center meta */
+  .topbar-center {
+    position:absolute; left:50%; transform:translateX(-50%);
+    display:flex; gap:24px; align-items:center;
   }
+  .meta-block { display:flex; flex-direction:column; align-items:center; gap:1px; }
+  .meta-label { font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-dim); }
+  .meta-value { font-family:'Share Tech Mono',monospace; font-size:13px; color:var(--text-secondary); }
+  .meta-value.highlight { color:var(--aktiv); }
+  .meta-divider { width:1px; height:26px; background:var(--border); }
 
-  .topbar-right { display: flex; align-items: center; gap: 24px; }
+  .topbar-right { display:flex; align-items:center; gap:16px; }
+  .clock-block { text-align:right; }
+  .clock { font-family:'Share Tech Mono',monospace; font-size:32px; color:var(--text-primary); letter-spacing:3px; line-height:1; }
+  .date  { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--text-secondary); letter-spacing:1px; margin-top:2px; }
 
-  .clock {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 22px; color: var(--text-primary); letter-spacing: 2px;
+  .fullscreen-btn {
+    background:none; border:1px solid var(--border);
+    border-radius:5px; padding:5px 8px;
+    color:var(--text-dim); cursor:pointer; font-size:15px;
+    transition:all 0.2s; opacity:1;
   }
-
-  .date {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px; color: var(--text-secondary);
-    letter-spacing: 1px; text-align: right;
-  }
-
-  .refresh-indicator {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px;
-  }
-
-  .refresh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); }
-
-  .refresh-dot.syncing {
-    background: var(--aktiv);
-    box-shadow: 0 0 6px var(--aktiv);
-    animation: blink 0.4s ease-in-out 3;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-  }
-
-  .main {
-    display: grid;
-    grid-template-columns: 1fr 1.6fr;
-    grid-template-rows: 1fr;
-    gap: 0; flex: 1; overflow: hidden;
-  }
-
-  .panel {
-    display: flex; flex-direction: column;
-    overflow: hidden; border-right: 1px solid var(--border);
-  }
-
-  .panel:last-child { border-right: none; }
-
-  .panel-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 20px; border-bottom: 1px solid var(--border);
-    background: #080e16; flex-shrink: 0;
-  }
-
-  .panel-title {
-    display: flex; align-items: center; gap: 10px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 900;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: var(--text-secondary);
-  }
-
-  .panel-title-icon { font-size: 15px; }
-
-  .panel-count {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px; color: var(--text-dim); letter-spacing: 1px;
-  }
-
-  .panel-body {
-    flex: 1; overflow-y: auto; padding: 14px;
-    display: flex; flex-direction: column; gap: 10px;
-    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-  }
-
-  /* DRIFT CARDS */
-  .drift-card {
-    border-radius: 8px; padding: 14px 16px;
-    border: 1px solid var(--border);
-    position: relative; overflow: hidden;
-    transition: transform 0.15s ease;
-    flex-shrink: 0;
-  }
-
-  .drift-card::before {
-    content: ''; position: absolute;
-    left: 0; top: 0; bottom: 0; width: 5px;
-  }
-
-  .drift-card.kritisk {
-    background: linear-gradient(135deg, #130608 0%, #0d1520 100%);
-    border-color: rgba(255,40,40,0.20);
-    box-shadow: 0 0 20px rgba(255,40,40,0.12), inset 0 0 40px rgba(255,40,40,0.03);
-  }
-
-  .drift-card.kritisk::before { background: var(--kritisk); box-shadow: 2px 0 12px rgba(255,40,40,0.5); }
-
-  .drift-card.kritisk.blink-card { animation: kritisk-pulse 2.5s ease-in-out infinite; }
-
-  @keyframes kritisk-pulse {
-    0%, 100% { box-shadow: 0 0 20px rgba(255,40,40,0.12), inset 0 0 40px rgba(255,40,40,0.03); }
-    50% { box-shadow: 0 0 35px rgba(255,40,40,0.28), inset 0 0 60px rgba(255,40,40,0.07); }
-  }
-
-  .drift-card.viktig {
-    background: linear-gradient(135deg, #110e04 0%, #0d1520 100%);
-    border-color: rgba(245,166,35,0.15);
-    box-shadow: 0 0 16px rgba(245,166,35,0.08);
-  }
-
-  .drift-card.viktig::before { background: var(--viktig); box-shadow: 2px 0 10px rgba(245,166,35,0.4); }
-
-  .drift-card.info { background: var(--bg-card); border-color: rgba(45,139,255,0.12); }
-  .drift-card.info::before { background: var(--info); }
-
-  .card-top {
-    display: flex; align-items: center;
-    justify-content: space-between; margin-bottom: 8px; gap: 10px;
-  }
-
-  .card-title {
-    font-size: 15px; font-weight: 900; color: #fff;
-    letter-spacing: 0.2px; overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap; flex: 1;
-  }
-
-  .badge {
-    font-size: 10px; font-weight: 900;
-    padding: 4px 10px; border-radius: 5px;
-    letter-spacing: 0.8px; white-space: nowrap;
-    font-family: 'Barlow Condensed', sans-serif;
-  }
-
-  .badge.kritisk { background: rgba(255,40,40,0.20); color: #ff6060; }
-  .badge.viktig  { background: rgba(245,166,35,0.20); color: #ffd080; }
-  .badge.info    { background: rgba(45,139,255,0.18); color: #7fb4ff; }
-
-  .card-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-
-  .chip {
-    font-size: 11px; font-weight: 700;
-    padding: 3px 9px; border-radius: 5px;
-    background: rgba(255,255,255,0.07); color: #8fafc8; letter-spacing: 0.2px;
-  }
-
-  .card-message {
-    font-size: 13px; color: #ccdde8; line-height: 1.5;
-    overflow: hidden; display: -webkit-box;
-    -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-  }
-
-  .card-footer {
-    display: flex; align-items: center;
-    justify-content: space-between;
-    margin-top: 10px; padding-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-  }
-
-  .aktiv-badge {
-    font-size: 10px; font-weight: 900;
-    letter-spacing: 1px; padding: 3px 8px; border-radius: 4px;
-    background: rgba(0,212,170,0.14); color: var(--aktiv);
-    font-family: 'Barlow Condensed', sans-serif;
-  }
-
-  .card-time {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; color: var(--text-dim);
-  }
-
-  .card-time.kritisk-time { color: #ff7070; }
-
-  /* JOURNAL CARDS */
-  .journal-card {
-    border-radius: 8px; padding: 13px 15px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--text-dim);
-    transition: transform 0.15s ease;
-    flex-shrink: 0;
-  }
-
-  .journal-card.kritisk-card {
-    border-left-color: var(--kritisk);
-    background: linear-gradient(135deg, #130608 0%, #0d1520 100%);
-    box-shadow: 0 0 12px rgba(255,40,40,0.10);
-  }
-
-  .journal-card.service-card {
-    border-left-color: var(--viktig);
-  }
-
-  .journal-card.new-entry { animation: slide-in 0.4s ease-out; }
-
-  @keyframes slide-in {
-    from { opacity: 0; transform: translateY(-10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .journal-top {
-    display: flex; align-items: flex-start;
-    justify-content: space-between; gap: 10px; margin-bottom: 6px;
-  }
-
-  .journal-title { font-size: 14px; font-weight: 800; color: #fff; flex: 1; }
-
-  .journal-time {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; color: var(--text-secondary);
-    white-space: nowrap; flex-shrink: 0;
-  }
-
-  .journal-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
-
-  .journal-body {
-    font-size: 12px; color: #9ab5cc; line-height: 1.45;
-    overflow: hidden; display: -webkit-box;
-    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  }
-
-  .journal-tiltak {
-    font-size: 11px; color: #6dcc8f; line-height: 1.4;
-    margin-top: 6px; padding-top: 6px;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    overflow: hidden; display: -webkit-box;
-    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  }
-
-  .journal-tiltak-label {
-    font-size: 9px; font-weight: 900;
-    letter-spacing: 0.8px; text-transform: uppercase;
-    color: #4a9e6a; margin-bottom: 2px;
-  }
-
-  .journal-no-tiltak {
-    font-size: 11px; color: #e05a5a;
-    font-style: italic; margin-top: 6px; padding-top: 6px;
-    border-top: 1px solid rgba(255,255,255,0.05);
-  }
-
-  .chip.type-inspeksjon { color: #f5a623; background: rgba(245,166,35,0.12); }
-  .chip.type-observasjon { color: #2d8bff; background: rgba(45,139,255,0.12); }
-  .chip.type-telefon { color: #aa44ff; background: rgba(170,68,255,0.12); }
-  .chip.type-service { color: #00d4aa; background: rgba(0,212,170,0.12); }
-  .chip.type-internkontroll { color: #ff7eb3; background: rgba(255,126,179,0.12); }
-
-  .status-pill {
-    font-size: 9px; font-weight: 800; padding: 2px 8px;
-    border-radius: 999px; letter-spacing: 0.4px;
-  }
-
-  .status-pill.utfort { background: rgba(74,158,106,0.2); color: #6dcc8f; border: 1px solid rgba(74,158,106,0.4); }
-  .status-pill.kritisk-pill { background: rgba(255,59,59,0.25); color: #ff6b6b; border: 1px solid rgba(255,59,59,0.5); }
-  .status-pill.service { background: rgba(245,166,35,0.2); color: #ffd08a; border: 1px solid rgba(245,166,35,0.4); }
-  .status-pill.default { background: rgba(45,139,255,0.15); color: #7fb4ff; border: 1px solid rgba(45,139,255,0.3); }
-
-  .tjenestenummer {
-    display: flex; align-items: center; gap: 4px;
-    background: rgba(255,255,255,0.05);
-    padding: 2px 8px; border-radius: 999px;
-    font-size: 11px; color: #c0d4e8; font-weight: 800;
-  }
-
-  /* EMPTY STATE */
-  .empty-state {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    flex: 1; gap: 10px; color: var(--text-dim);
-  }
-
-  .empty-state .icon { font-size: 32px; opacity: 0.4; }
-  .empty-state .text { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
-
-  /* STATUS BAR */
-  .statusbar {
-    height: 28px; background: #050a10;
-    border-top: 1px solid var(--border);
-    display: flex; align-items: center;
-    padding: 0 20px; gap: 24px; flex-shrink: 0;
-  }
-
-  .status-item {
-    display: flex; align-items: center; gap: 6px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; color: var(--text-dim); letter-spacing: 0.5px;
-  }
-
-  .status-dot { width: 5px; height: 5px; border-radius: 50%; }
-  .status-dot.green { background: var(--aktiv); box-shadow: 0 0 5px var(--aktiv); }
-  .status-dot.red   { background: var(--kritisk); }
-  .status-dot.yellow{ background: var(--viktig); }
-  .status-dot.blue  { background: var(--info); }
+  .fullscreen-btn:hover { border-color:var(--text-secondary); color:var(--text-secondary); }
+  .fullscreen-btn.hidden { opacity:0; pointer-events:none; }
 
   /* KRITISK BANNER */
   .kritisk-banner {
-    display: none; align-items: center; justify-content: center;
-    gap: 12px; padding: 8px 20px;
-    background: rgba(255,40,40,0.12);
-    border-bottom: 1px solid rgba(255,40,40,0.30);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 14px; font-weight: 900;
-    letter-spacing: 2px; color: #ff5555;
-    text-transform: uppercase;
-    animation: banner-pulse 1.5s ease-in-out infinite;
-    flex-shrink: 0;
+    display:none; align-items:center; justify-content:center;
+    gap:12px; padding:7px 20px;
+    background:rgba(255,40,40,0.12); border-bottom:1px solid rgba(255,40,40,0.30);
+    font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:900;
+    letter-spacing:2px; color:#ff5555; text-transform:uppercase;
+    animation:banner-pulse 1.5s ease-in-out infinite; flex-shrink:0;
   }
+  .kritisk-banner.visible { display:flex; }
 
-  .kritisk-banner.visible { display: flex; }
+  /* HOLIDAY BANNER */
+  .holiday-banner {
+    display:none; align-items:center; justify-content:center;
+    gap:10px; padding:5px 20px;
+    background:rgba(245,166,35,0.10); border-bottom:1px solid rgba(245,166,35,0.20);
+    font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700;
+    letter-spacing:1.5px; color:#ffd080; flex-shrink:0;
+  }
+  .holiday-banner.visible { display:flex; }
 
   @keyframes banner-pulse {
-    0%, 100% { background: rgba(255,40,40,0.12); }
-    50% { background: rgba(255,40,40,0.20); }
+    0%,100% { background:rgba(255,40,40,0.12); }
+    50%      { background:rgba(255,40,40,0.22); }
   }
 
-  .panel-body::-webkit-scrollbar { width: 4px; }
-  .panel-body::-webkit-scrollbar-track { background: transparent; }
-  .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  /* 3-COLUMN LAYOUT */
+  .main { display:grid; grid-template-columns:1fr 250px 1.6fr; flex:1; overflow:hidden; }
 
-  /* CONFIG OVERLAY */
-  .config-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 100; backdrop-filter: blur(4px); transition: opacity 0.3s;
+  .panel { display:flex; flex-direction:column; overflow:hidden; border-right:1px solid var(--border); }
+  .panel:last-child { border-right:none; }
+
+  .panel-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 16px; border-bottom:1px solid var(--border);
+    background:#080e16; flex-shrink:0;
   }
-
-  .config-box {
-    background: #0d1520;
-    border: 1px solid rgba(45,139,255,0.3);
-    border-radius: 12px; padding: 32px 36px; width: 480px;
-    box-shadow: 0 0 60px rgba(45,139,255,0.15);
+  .panel-title {
+    display:flex; align-items:center; gap:8px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:12px; font-weight:900; letter-spacing:2px;
+    text-transform:uppercase; color:var(--text-secondary);
   }
+  .panel-count { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--text-dim); }
 
-  .config-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 20px; font-weight: 900;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: #fff; margin-bottom: 6px;
+  .panel-body {
+    flex:1; overflow-y:auto; padding:12px;
+    display:flex; flex-direction:column; gap:8px;
+    scrollbar-width:thin; scrollbar-color:var(--border) transparent;
   }
+  .panel-body::-webkit-scrollbar { width:3px; }
+  .panel-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 
-  .config-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
+  /* STATS PANEL */
+  .stats-panel { display:flex; flex-direction:column; overflow:hidden; border-right:1px solid var(--border); background:#080e16; }
+  .stats-body { flex:1; overflow-y:auto; padding:12px 11px; display:flex; flex-direction:column; gap:9px; scrollbar-width:none; }
 
-  .config-field { margin-bottom: 16px; }
+  .stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:11px 13px; }
+  .stat-card-label { font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-dim); margin-bottom:6px; }
 
-  .config-label {
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
-    color: var(--text-secondary); margin-bottom: 6px; display: block;
+  .stat-big { font-family:'Share Tech Mono',monospace; font-size:30px; color:var(--aktiv); line-height:1; }
+  .stat-big.danger { color:var(--kritisk); }
+  .stat-big.dim    { color:var(--text-secondary); }
+
+  .stat-sub { font-size:11px; color:var(--text-dim); margin-top:3px; }
+
+  .stat-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+  .stat-row:last-child { border-bottom:none; }
+  .stat-row-label { font-size:11px; color:var(--text-secondary); display:flex; align-items:center; gap:5px; }
+  .stat-row-val { font-family:'Share Tech Mono',monospace; font-size:12px; font-weight:700; color:var(--text-primary); }
+
+  .vaktskift-bar { height:3px; background:rgba(255,255,255,0.06); border-radius:2px; margin-top:8px; overflow:hidden; }
+  .vaktskift-fill { height:100%; background:var(--aktiv); border-radius:2px; }
+
+  .stilleperiode {
+    display:none; align-items:center; gap:7px; padding:8px 10px; border-radius:6px;
+    background:rgba(245,166,35,0.10); border:1px solid rgba(245,166,35,0.25);
+    font-size:11px; color:#ffd080; font-weight:700;
   }
+  .stilleperiode.visible { display:flex; }
 
-  .config-input {
-    width: 100%; background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 6px; padding: 10px 14px;
-    font-size: 13px; color: #fff;
-    font-family: 'Share Tech Mono', monospace;
-    outline: none; transition: border-color 0.2s;
+  .total-count-card {
+    background:linear-gradient(135deg,rgba(45,139,255,0.08),rgba(0,212,170,0.05));
+    border:1px solid rgba(45,139,255,0.15); border-radius:8px; padding:11px 13px; text-align:center;
   }
+  .total-count-num { font-family:'Share Tech Mono',monospace; font-size:26px; color:var(--text-secondary); letter-spacing:2px; }
+  .total-count-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim); margin-top:3px; }
 
-  .config-input:focus { border-color: rgba(45,139,255,0.5); }
-
-  .config-hint { font-size: 11px; color: var(--text-dim); margin-top: 5px; line-height: 1.4; }
-
-  .config-btn {
-    width: 100%; padding: 12px;
-    background: var(--info); border: none; border-radius: 7px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 15px; font-weight: 900;
-    letter-spacing: 1.5px; text-transform: uppercase;
-    color: #fff; cursor: pointer; margin-top: 8px;
-    transition: background 0.2s, box-shadow 0.2s;
+  .refresh-mini {
+    display:flex; align-items:center; gap:5px;
+    font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim);
+    padding:8px 11px; border-top:1px solid var(--border); flex-shrink:0;
   }
+  .refresh-dot-mini { width:5px; height:5px; border-radius:50%; background:var(--text-dim); }
+  .refresh-dot-mini.syncing { background:var(--aktiv); box-shadow:0 0 5px var(--aktiv); animation:blink 0.4s ease-in-out 3; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-  .config-btn:hover { background: #4499ff; box-shadow: 0 0 20px rgba(45,139,255,0.4); }
-
-  .error-text {
-    color: var(--kritisk); font-size: 12px;
-    margin-top: 10px; text-align: center; display: none;
+  /* DRIFT CARDS */
+  .drift-card {
+    border-radius:8px; padding:13px 14px; border:1px solid var(--border);
+    position:relative; overflow:hidden; flex-shrink:0;
   }
+  .drift-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; }
+
+  .drift-card.kritisk { background:linear-gradient(135deg,#130608 0%,#0d1520 100%); border-color:rgba(255,40,40,0.20); box-shadow:0 0 20px rgba(255,40,40,0.10); }
+  .drift-card.kritisk::before { background:var(--kritisk); box-shadow:2px 0 10px rgba(255,40,40,0.5); }
+  .drift-card.kritisk.blink-card { animation:kritisk-pulse 2.5s ease-in-out infinite; }
+  @keyframes kritisk-pulse {
+    0%,100% { box-shadow:0 0 20px rgba(255,40,40,0.10); }
+    50%      { box-shadow:0 0 35px rgba(255,40,40,0.28); }
+  }
+  .drift-card.viktig { background:linear-gradient(135deg,#110e04 0%,#0d1520 100%); border-color:rgba(245,166,35,0.15); }
+  .drift-card.viktig::before { background:var(--viktig); }
+  .drift-card.info { background:var(--bg-card); border-color:rgba(45,139,255,0.10); }
+  .drift-card.info::before { background:var(--info); }
+
+  .drift-card.size-lg .card-title   { font-size:17px; }
+  .drift-card.size-lg .card-message { font-size:14px; -webkit-line-clamp:4; }
+
+  .card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; gap:8px; }
+  .card-title { font-size:14px; font-weight:900; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+  .badge { font-size:9px; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:0.8px; white-space:nowrap; font-family:'Barlow Condensed',sans-serif; }
+  .badge.kritisk { background:rgba(255,40,40,0.20); color:#ff6060; }
+  .badge.viktig  { background:rgba(245,166,35,0.20); color:#ffd080; }
+  .badge.info    { background:rgba(45,139,255,0.18); color:#7fb4ff; }
+
+  .card-chips { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:7px; }
+  .chip { font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; background:rgba(255,255,255,0.07); color:#8fafc8; }
+  .chip.type-inspeksjon     { color:#f5a623; background:rgba(245,166,35,0.12); }
+  .chip.type-observasjon    { color:#2d8bff; background:rgba(45,139,255,0.12); }
+  .chip.type-telefon        { color:#aa44ff; background:rgba(170,68,255,0.12); }
+  .chip.type-service        { color:#00d4aa; background:rgba(0,212,170,0.12); }
+  .chip.type-internkontroll { color:#ff7eb3; background:rgba(255,126,179,0.12); }
+
+  .card-message { font-size:12px; color:#ccdde8; line-height:1.5; overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
+  .card-footer { display:flex; align-items:center; justify-content:space-between; margin-top:9px; padding-top:7px; border-top:1px solid rgba(255,255,255,0.05); }
+  .aktiv-badge { font-size:9px; font-weight:900; letter-spacing:1px; padding:2px 7px; border-radius:3px; background:rgba(0,212,170,0.14); color:var(--aktiv); font-family:'Barlow Condensed',sans-serif; }
+  .card-time { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim); }
+  .card-time.kritisk-time { color:#ff7070; }
+
+  /* JOURNAL CARDS */
+  .journal-card {
+    border-radius:7px; padding:10px 12px; background:var(--bg-card);
+    border:1px solid var(--border); border-left:3px solid var(--text-dim); flex-shrink:0;
+  }
+  .journal-card.zebra { background:rgba(255,255,255,0.016); }
+  .journal-card.kritisk-card { border-left-color:var(--kritisk); background:linear-gradient(135deg,#130608,#0d1520); }
+  .journal-card.service-card { border-left-color:var(--viktig); }
+  .journal-card.new-entry { animation:slide-in 0.4s ease-out; }
+  .journal-card.flash-new { animation:flash-green 2s ease-out; }
+  @keyframes slide-in { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes flash-green { 0%{background:rgba(0,212,170,0.18);border-color:rgba(0,212,170,0.5)} 100%{background:var(--bg-card);border-color:var(--border)} }
+
+  .date-sep { display:flex; align-items:center; gap:8px; padding:4px 0; flex-shrink:0; }
+  .date-sep-line { flex:1; height:1px; background:var(--border); }
+  .date-sep-label { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim); white-space:nowrap; }
+
+  .journal-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:5px; }
+  .journal-title { font-size:13px; font-weight:800; color:#fff; flex:1; }
+  .journal-time  { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-secondary); white-space:nowrap; flex-shrink:0; }
+  .journal-meta  { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:5px; }
+  .journal-body  { font-size:11px; color:#9ab5cc; line-height:1.45; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .journal-tiltak { font-size:10px; color:#6dcc8f; line-height:1.4; margin-top:5px; padding-top:5px; border-top:1px solid rgba(255,255,255,0.05); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .journal-tiltak-label { font-size:8px; font-weight:900; letter-spacing:0.8px; text-transform:uppercase; color:#4a9e6a; margin-bottom:2px; }
+  .journal-no-tiltak { font-size:10px; color:#e05a5a; font-style:italic; margin-top:5px; padding-top:5px; border-top:1px solid rgba(255,255,255,0.05); }
+
+  /* Typewriter */
+  .typewriter { overflow:hidden; white-space:nowrap; border-right:2px solid var(--aktiv); }
+  .typewriter.done { border-right:none; white-space:normal; }
+
+  .status-pill { font-size:8px; font-weight:800; padding:2px 7px; border-radius:999px; letter-spacing:0.4px; }
+  .status-pill.utfort       { background:rgba(74,158,106,0.2); color:#6dcc8f; border:1px solid rgba(74,158,106,0.4); }
+  .status-pill.kritisk-pill { background:rgba(255,59,59,0.25); color:#ff6b6b; border:1px solid rgba(255,59,59,0.5); }
+  .status-pill.service      { background:rgba(245,166,35,0.2); color:#ffd08a; border:1px solid rgba(245,166,35,0.4); }
+  .status-pill.default      { background:rgba(45,139,255,0.15); color:#7fb4ff; border:1px solid rgba(45,139,255,0.3); }
+
+  .tjenestenummer { display:flex; align-items:center; gap:3px; background:rgba(255,255,255,0.05); padding:2px 7px; border-radius:999px; font-size:10px; color:#c0d4e8; font-weight:800; }
+
+  /* EMPTY STATE */
+  .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:8px; color:var(--text-dim); }
+  .empty-state .icon { font-size:28px; opacity:0.4; }
+  .empty-state .text { font-size:12px; letter-spacing:1px; text-transform:uppercase; }
+
+  /* STATUS BAR */
+  .statusbar { height:26px; background:#050a10; border-top:1px solid var(--border); display:flex; align-items:center; padding:0 18px; gap:20px; flex-shrink:0; }
+  .status-item { display:flex; align-items:center; gap:5px; font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim); letter-spacing:0.5px; }
+  .status-dot { width:5px; height:5px; border-radius:50%; }
+  .status-dot.green  { background:var(--aktiv); box-shadow:0 0 5px var(--aktiv); }
+  .status-dot.red    { background:var(--kritisk); }
+  .status-dot.yellow { background:var(--viktig); }
+  .status-dot.blue   { background:var(--info); }
+
+  /* CONFIG */
+  .config-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); display:flex; align-items:center; justify-content:center; z-index:100; backdrop-filter:blur(6px); transition:opacity 0.3s; }
+  .config-box { background:#0d1520; border:1px solid rgba(45,139,255,0.3); border-radius:12px; padding:32px 36px; width:480px; box-shadow:0 0 60px rgba(45,139,255,0.15); }
+  .config-title { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#fff; margin-bottom:6px; }
+  .config-sub { font-size:13px; color:var(--text-secondary); margin-bottom:24px; line-height:1.5; }
+  .config-field { margin-bottom:16px; }
+  .config-label { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:6px; display:block; }
+  .config-input { width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:6px; padding:10px 14px; font-size:13px; color:#fff; font-family:'Share Tech Mono',monospace; outline:none; transition:border-color 0.2s; }
+  .config-input:focus { border-color:rgba(45,139,255,0.5); }
+  .config-hint { font-size:11px; color:var(--text-dim); margin-top:5px; line-height:1.4; }
+  .config-btn { width:100%; padding:12px; background:var(--info); border:none; border-radius:7px; font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; color:#fff; cursor:pointer; margin-top:8px; transition:background 0.2s,box-shadow 0.2s; }
+  .config-btn:hover { background:#4499ff; box-shadow:0 0 20px rgba(45,139,255,0.4); }
+  .error-text { color:var(--kritisk); font-size:12px; margin-top:10px; text-align:center; display:none; }
+
+  /* Anti-burn */
+  body.shift-1 { transform:translate(1px,0); }
+  body.shift-2 { transform:translate(0,1px); }
+  body.shift-3 { transform:translate(-1px,0); }
+  body.shift-4 { transform:translate(0,-1px); }
 </style>
 </head>
 <body>
 
-<!-- CONFIG OVERLAY -->
+<!-- CONFIG -->
 <div class="config-overlay" id="configOverlay">
   <div class="config-box">
-    <div class="config-title">⚙️ Wallboard Oppsett (API)</div>
-    <div class="config-sub">Siden er tilkoblet via Power Automate.</div>
-
+    <div class="config-title">⚙️ Wallboard Oppsett</div>
+    <div class="config-sub">Kobler til SharePoint via Power Automate.</div>
     <div class="config-field">
       <label class="config-label">Power Automate Flow URL</label>
       <input class="config-input" id="apiUrl" value="https://default9581cfe206ce40b7953a69a246f834.a8.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/058fccf9c6db4e66a84f3a59d5e05475/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=6s1mq12Vz9rCEpVfr87r3j1CKUx1k4JYkrTYmqG4s_E" />
-      <div class="config-hint">Limer inn URLen til flowen din her.</div>
+      <div class="config-hint">Lim inn URL fra Power Automate-flyten din.</div>
     </div>
-
     <button class="config-btn" onclick="startLive()">🚀 Start live wallboard</button>
-    <div class="error-text" id="configError">Kunne ikke hente data. Sjekk at URLen stemmer og at Flowen er aktivert.</div>
+    <div class="error-text" id="configError"></div>
   </div>
 </div>
+
+<!-- OFFLINE -->
+<div class="offline-banner" id="offlineBanner">⚠️ TILKOBLING TAPT – SISTE DATA FRA <span id="offlineTime">–</span></div>
 
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-left">
-    <div class="logo-dot"></div>
-    <div>
+    <div class="logo-wrap">
+      <div class="logo-dot"></div>
+      <div class="radar-ring" id="radarRing"></div>
+    </div>
+    <div class="topbar-branding">
       <div class="topbar-title">Vaktsentral – Command Center</div>
-      <div class="topbar-subtitle" id="locationLabel">Mustad Eiendom</div>
+      <div class="topbar-subtitle">Mustad Eiendom</div>
     </div>
   </div>
-  <div class="topbar-right">
-    <div class="refresh-indicator">
-      <div class="refresh-dot" id="refreshDot"></div>
-      <span id="refreshLabel">Oppdaterer om <span id="nextRefresh">30</span>s</span>
+
+  <div class="topbar-center">
+    <div class="meta-block">
+      <div class="meta-label">Siste hendelse</div>
+      <div class="meta-value highlight" id="sisteHendelse">–</div>
     </div>
-    <div>
+    <div class="meta-divider"></div>
+    <div class="meta-block">
+      <div class="meta-label">Neste vaktskifte</div>
+      <div class="meta-value" id="vaktskifteCountdown">–</div>
+    </div>
+    <div class="meta-divider"></div>
+    <div class="meta-block">
+      <div class="meta-label">Uke</div>
+      <div class="meta-value" id="weekNum">–</div>
+    </div>
+    <div class="meta-divider"></div>
+    <div class="meta-block">
+      <div class="meta-label">Oppdaterer om</div>
+      <div class="meta-value" id="nextRefresh">30s</div>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">⛶</button>
+    <div class="clock-block">
       <div class="clock" id="clock">00:00:00</div>
       <div class="date" id="dateLine">–</div>
     </div>
   </div>
 </div>
 
-<!-- KRITISK BANNER -->
-<div class="kritisk-banner" id="kritiskBanner">
-  🚨 KRITISK MELDING AKTIV – SE DRIFTMELDINGER
-</div>
+<div class="kritisk-banner" id="kritiskBanner">🚨 KRITISK MELDING AKTIV – SE DRIFTMELDINGER</div>
+<div class="holiday-banner" id="holidayBanner"></div>
 
 <!-- MAIN -->
 <div class="main">
 
-  <!-- PANEL 1: DRIFTMELDINGER -->
+  <!-- DRIFTMELDINGER -->
   <div class="panel">
     <div class="panel-header">
-      <div class="panel-title">
-        <span class="panel-title-icon">📡</span>
-        Driftmeldinger
-      </div>
+      <div class="panel-title"><span>📡</span> Driftmeldinger</div>
       <div class="panel-count" id="driftCount">– aktive</div>
     </div>
     <div class="panel-body" id="driftBody">
-      <div class="empty-state">
-        <div class="icon">📡</div>
-        <div class="text">Laster meldinger...</div>
-      </div>
+      <div class="empty-state"><div class="icon">📡</div><div class="text">Laster meldinger...</div></div>
     </div>
   </div>
 
-  <!-- PANEL 2: JOURNAL -->
+  <!-- STATS -->
+  <div class="stats-panel">
+    <div class="panel-header">
+      <div class="panel-title"><span>📊</span> Status</div>
+    </div>
+    <div class="stats-body">
+
+      <div class="stat-card" id="statKritiskCard">
+        <div class="stat-card-label">Kritiske meldinger</div>
+        <div class="stat-big dim" id="statKritisk">0</div>
+        <div class="stat-sub" id="statKritiskSub">Ingen kritiske</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">Aktive meldinger</div>
+        <div class="stat-row"><span class="stat-row-label">🔴 Kritisk</span><span class="stat-row-val" id="s_kritisk">0</span></div>
+        <div class="stat-row"><span class="stat-row-label">🟡 Viktig</span><span class="stat-row-val" id="s_viktig">0</span></div>
+        <div class="stat-row"><span class="stat-row-label">🔵 Info</span><span class="stat-row-val" id="s_info">0</span></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">Vaktskifte</div>
+        <div class="stat-row"><span class="stat-row-label">🕐 Neste</span><span class="stat-row-val" id="s_vakt">–</span></div>
+        <div class="stat-row"><span class="stat-row-label">⏱ Om</span><span class="stat-row-val highlight" id="s_vaktom">–</span></div>
+        <div class="vaktskift-bar"><div class="vaktskift-fill" id="vaktFill" style="width:0%"></div></div>
+      </div>
+
+      <div class="stilleperiode" id="stilleperiode">⚠️ Ingen nye hendelser siste <span id="stilleTimer">–</span></div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">Journal i dag</div>
+        <div class="stat-big dim" id="statJournalToday">0</div>
+        <div class="stat-sub">hendelser registrert</div>
+      </div>
+
+      <div class="total-count-card">
+        <div class="total-count-num" id="totalCount">–</div>
+        <div class="total-count-label">totalt i journalen</div>
+      </div>
+
+    </div>
+    <div class="refresh-mini">
+      <div class="refresh-dot-mini" id="refreshDot"></div>
+      SIST: <span id="lastUpdated" style="margin-left:4px">–</span>
+    </div>
+  </div>
+
+  <!-- JOURNAL -->
   <div class="panel">
     <div class="panel-header">
-      <div class="panel-title">
-        <span class="panel-title-icon">📋</span>
-        Hendelseslogg
-      </div>
+      <div class="panel-title"><span>📋</span> Hendelseslogg</div>
       <div class="panel-count" id="journalCount">– oppføringer</div>
     </div>
     <div class="panel-body" id="journalBody">
-      <div class="empty-state">
-        <div class="icon">📋</div>
-        <div class="text">Laster journal...</div>
-      </div>
+      <div class="empty-state"><div class="icon">📋</div><div class="text">Laster journal...</div></div>
     </div>
   </div>
 
@@ -538,343 +458,458 @@
 
 <!-- STATUS BAR -->
 <div class="statusbar">
-  <div class="status-item">
-    <div class="status-dot green"></div>
-    SYSTEM ONLINE
-  </div>
-  <div class="status-item">
-    <div class="status-dot red"></div>
-    <span id="kritiskNum">0</span> KRITISK
-  </div>
-  <div class="status-item">
-    <div class="status-dot yellow"></div>
-    <span id="viktigNum">0</span> VIKTIG
-  </div>
-  <div class="status-item">
-    <div class="status-dot blue"></div>
-    <span id="infoNum">0</span> INFO
-  </div>
-  <div class="status-item" style="margin-left:auto;">
-    SIST OPPDATERT: <span id="lastUpdated" style="margin-left:6px;">–</span>
-  </div>
+  <div class="status-item"><div class="status-dot green"></div>SYSTEM ONLINE</div>
+  <div class="status-item"><div class="status-dot red"></div><span id="kritiskNum">0</span> KRITISK</div>
+  <div class="status-item"><div class="status-dot yellow"></div><span id="viktigNum">0</span> VIKTIG</div>
+  <div class="status-item"><div class="status-dot blue"></div><span id="infoNum">0</span> INFO</div>
+  <div class="status-item" style="margin-left:auto">TOTALT JOURNAL: <span id="totalJournalBar" style="margin-left:4px">–</span></div>
 </div>
 
 <script>
-// ── HELPERS ──────────────────────────────────────────────
-
-// SharePoint kan returnere Choice/Lookup-felt som { Value: "Kritisk" } eller bare "Kritisk"
-// Denne funksjonen håndterer begge
+// ═══ HELPERS ═══════════════════════════════════════════════
 function spVal(v) {
-  if (v === null || v === undefined) return '';
-  if (typeof v === 'object') {
-    // Choice: { Value: "..." }
-    if (v.Value !== undefined) return String(v.Value);
-    // Lookup: { lookupValue: "..." }
-    if (v.lookupValue !== undefined) return String(v.lookupValue);
+  if (v===null||v===undefined) return '';
+  if (typeof v==='object') {
+    if (v.Value!==undefined)       return String(v.Value);
+    if (v.lookupValue!==undefined) return String(v.lookupValue);
     return '';
   }
   return String(v);
 }
-
-function escHtml(str) {
-  return String(str || '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-function formatTime(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  const today = new Date();
-  const isToday = d.toDateString() === today.toDateString();
-  const time = d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
-  if (isToday) return `i dag ${time}`;
-  return d.toLocaleDateString('no-NO', { day: 'numeric', month: 'short' }) + ' ' + time;
+function formatTime(ds) {
+  if (!ds) return '';
+  const d=new Date(ds); if(isNaN(d)) return '';
+  const now=new Date();
+  const time=d.toLocaleTimeString('no-NO',{hour:'2-digit',minute:'2-digit'});
+  if (d.toDateString()===now.toDateString()) return `i dag ${time}`;
+  const yest=new Date(); yest.setDate(yest.getDate()-1);
+  if (d.toDateString()===yest.toDateString()) return `i går ${time}`;
+  return d.toLocaleDateString('no-NO',{day:'numeric',month:'short'})+' '+time;
 }
-
-function typeEmoji(type) {
-  const t = (type || '').toLowerCase();
-  if (t.includes('inspeksjon'))     return '🔍';
-  if (t.includes('observasjon'))    return '👁️';
-  if (t.includes('telefon'))        return '📞';
-  if (t.includes('service'))        return '🔧';
-  if (t.includes('internkontroll')) return '📊';
+function timeAgo(ds) {
+  if (!ds) return '–';
+  const m=Math.floor((Date.now()-new Date(ds))/60000);
+  if (m<1)  return 'nå nettopp';
+  if (m<60) return `${m} min siden`;
+  const h=Math.floor(m/60);
+  if (h<24) return `${h}t siden`;
+  return `${Math.floor(h/24)}d siden`;
+}
+function getWeekNum(d) {
+  d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));
+  return Math.ceil((((d-new Date(Date.UTC(d.getUTCFullYear(),0,1)))/86400000)+1)/7);
+}
+function typeEmoji(t) {
+  t=(t||'').toLowerCase();
+  if(t.includes('inspeksjon'))     return '🔍';
+  if(t.includes('observasjon'))    return '👁️';
+  if(t.includes('telefon'))        return '📞';
+  if(t.includes('service'))        return '🔧';
+  if(t.includes('internkontroll')) return '📊';
   return '📋';
 }
-
-function typeChipClass(type) {
-  const t = (type || '').toLowerCase();
-  if (t.includes('inspeksjon'))     return 'type-inspeksjon';
-  if (t.includes('observasjon'))    return 'type-observasjon';
-  if (t.includes('telefon'))        return 'type-telefon';
-  if (t.includes('service'))        return 'type-service';
-  if (t.includes('internkontroll')) return 'type-internkontroll';
+function typeChipClass(t) {
+  t=(t||'').toLowerCase();
+  if(t.includes('inspeksjon'))     return 'type-inspeksjon';
+  if(t.includes('observasjon'))    return 'type-observasjon';
+  if(t.includes('telefon'))        return 'type-telefon';
+  if(t.includes('service'))        return 'type-service';
+  if(t.includes('internkontroll')) return 'type-internkontroll';
   return '';
 }
-
-function statusPillClass(status) {
-  const s = (status || '').toLowerCase();
-  if (s.includes('utf'))    return 'utfort';   // Utført
-  if (s.includes('kritisk')) return 'kritisk-pill';
-  if (s.includes('service')) return 'service';
+function statusPillClass(s) {
+  s=(s||'').toLowerCase();
+  if(s.includes('utf'))     return 'utfort';
+  if(s.includes('kritisk')) return 'kritisk-pill';
+  if(s.includes('service')) return 'service';
   return 'default';
 }
-
-function kategoriEmoji(kat) {
-  if (!kat) return '⚙️';
-  const k = kat.toLowerCase();
-  if (k.includes('adgang'))  return '🔐';
-  if (k.includes('nøkkel'))  return '🗝️';
-  if (k.includes('kode') || k.includes('pin')) return '🔢';
-  if (k.includes('alarm'))   return '🚨';
-  if (k.includes('kamera') || k.includes('itv')) return '📷';
-  if (k.includes('rutine') || k.includes('prosedyre')) return '📄';
-  if (k.includes('dør') || k.includes('port')) return '🚪';
-  if (k.includes('system'))  return '💻';
+function kategoriEmoji(k) {
+  k=(k||'').toLowerCase();
+  if(k.includes('adgang'))  return '🔐';
+  if(k.includes('nøkkel'))  return '🗝️';
+  if(k.includes('kode')||k.includes('pin')) return '🔢';
+  if(k.includes('alarm'))   return '🚨';
+  if(k.includes('kamera')||k.includes('itv')) return '📷';
+  if(k.includes('rutine')||k.includes('prosedyre')) return '📄';
+  if(k.includes('dør')||k.includes('port')) return '🚪';
+  if(k.includes('system'))  return '💻';
   return '⚙️';
 }
 
-// ── CONFIG ────────────────────────────────────────────────
-let apiUrl = '';
-let refreshInterval = null;
-let countdownInterval = null;
-let countdown = 30;
-
-// ── CLOCK ────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent =
-    now.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  document.getElementById('dateLine').textContent =
-    now.toLocaleDateString('no-NO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+// ═══ NORSK HELLIGDAGER ═════════════════════════════════════
+function getNorwegianHoliday(date) {
+  const d=date.getDate(), m=date.getMonth()+1, y=date.getFullYear();
+  const fixed={'1-1':'🎉 Nyttårsdag','1-5':'🌹 Arbeidernes dag','17-5':'🇳🇴 Grunnlovsdag','25-12':'🎄 1. juledag','26-12':'🎄 2. juledag','24-12':'🎄 Julaften','31-12':'🎆 Nyttårsaften'};
+  if(fixed[`${d}-${m}`]) return fixed[`${d}-${m}`];
+  const e=getEaster(y), diff=(date-e)/86400000;
+  const easterDays={'-3':'🙏 Skjærtorsdag','-2':'✝️ Langfredag','0':'🐣 Påskedag','1':'🐣 2. påskedag','39':'✝️ Kristi himmelfartsdag','49':'🕊️ Pinsedag','50':'🕊️ 2. pinsedag'};
+  return easterDays[String(Math.round(diff))]||null;
 }
-setInterval(updateClock, 1000);
+function getEaster(y) {
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),
+        g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,
+        l=(32+2*e+2*i-h-k)%7,mo=Math.floor((a+11*h+22*l)/451),
+        month=Math.floor((h+l-7*mo+114)/31),day=((h+l-7*mo+114)%31)+1;
+  return new Date(y,month-1,day);
+}
+
+// ═══ VAKTSKIFTE ════════════════════════════════════════════
+const VAKTER=[6,14,22];
+function getNextVaktskifte() {
+  const now=new Date(), h=now.getHours()+now.getMinutes()/60;
+  let nextH=VAKTER.find(v=>v>h);
+  const nextDate=new Date(now);
+  if(nextH===undefined){nextH=VAKTER[0];nextDate.setDate(nextDate.getDate()+1);}
+  nextDate.setHours(nextH,0,0,0);
+  let prevH=null;
+  for(let i=VAKTER.length-1;i>=0;i--){if(VAKTER[i]<=h){prevH=VAKTER[i];break;}}
+  const prevDate=new Date(now);
+  if(prevH===null){prevH=VAKTER[VAKTER.length-1];prevDate.setDate(prevDate.getDate()-1);}
+  prevDate.setHours(prevH,0,0,0);
+  const progress=Math.min(100,((now-prevDate)/(nextDate-prevDate))*100);
+  const ms=nextDate-now, ho=Math.floor(ms/3600000), mi=Math.floor((ms%3600000)/60000);
+  return {label:`${String(nextH).padStart(2,'0')}:00`, countdown:ho>0?`${ho}t ${mi}m`:`${mi}m`, progress};
+}
+
+// ═══ SOUND ════════════════════════════════════════════════
+let audioCtx=null;
+function playAlert() {
+  try {
+    if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type='sine'; o.frequency.value=880;
+    g.gain.setValueAtTime(0.25,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.7);
+    o.start(); o.stop(audioCtx.currentTime+0.7);
+  } catch(e){}
+}
+
+// ═══ STATE ════════════════════════════════════════════════
+let apiUrl='', refreshInterval=null, countdownSec=30, countdownInterval=null;
+let lastSuccessTime=null, isOffline=false;
+let lastKritiskIds=new Set(), lastJournalId=null, lastJournalCreated=null;
+let autoScrollInterval=null, autoScrollDir=1;
+let isFirstRender=true;
+
+// ═══ CLOCK + META ══════════════════════════════════════════
+function updateClock() {
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleTimeString('no-NO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('dateLine').textContent=now.toLocaleDateString('no-NO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('weekNum').textContent=`Uke ${getWeekNum(now)}`;
+  document.getElementById('nextRefresh').textContent=countdownSec+'s';
+
+  const vs=getNextVaktskifte();
+  document.getElementById('vaktskifteCountdown').textContent=vs.countdown;
+  document.getElementById('s_vakt').textContent=vs.label;
+  document.getElementById('s_vaktom').textContent=vs.countdown;
+  document.getElementById('vaktFill').style.width=vs.progress+'%';
+
+  // Holiday
+  const hol=getNorwegianHoliday(now);
+  const hb=document.getElementById('holidayBanner');
+  if(hol){hb.textContent=hol;hb.classList.add('visible');}
+  else hb.classList.remove('visible');
+
+  // Stilleperiode (warn after 2h of no activity, daytime only)
+  if(lastJournalCreated && now.getHours()>=8 && now.getHours()<22) {
+    const diffMin=Math.floor((now-new Date(lastJournalCreated))/60000);
+    const sp=document.getElementById('stilleperiode');
+    if(diffMin>120) {
+      const hh=Math.floor(diffMin/60),mm=diffMin%60;
+      document.getElementById('stilleTimer').textContent=hh>0?`${hh}t ${mm}m`:`${mm}m`;
+      sp.classList.add('visible');
+    } else sp.classList.remove('visible');
+  }
+}
+setInterval(updateClock,1000);
 updateClock();
 
 function startCountdown() {
-  countdown = 30;
-  clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    countdown--;
-    document.getElementById('nextRefresh').textContent = countdown;
-    if (countdown <= 0) countdown = 30;
-  }, 1000);
+  countdownSec=30; clearInterval(countdownInterval);
+  countdownInterval=setInterval(()=>{countdownSec--;if(countdownSec<0)countdownSec=30;},1000);
 }
 
-// ── RENDER DRIFTMELDINGER ────────────────────────────────
+// ═══ TYPEWRITER ═══════════════════════════════════════════
+function typewriterEffect(el,text,speed=16) {
+  el.classList.add('typewriter'); el.textContent=''; let i=0;
+  const t=setInterval(()=>{el.textContent+=text[i++];if(i>=text.length){clearInterval(t);setTimeout(()=>el.classList.add('done'),200);}},speed);
+}
+
+// ═══ RADAR ════════════════════════════════════════════════
+function triggerRadar() {
+  const r=document.getElementById('radarRing');
+  r.classList.remove('active'); void r.offsetWidth; r.classList.add('active');
+}
+
+// ═══ FULLSCREEN ════════════════════════════════════════════
+let fsTimer=null;
+function toggleFullscreen() {
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
+document.addEventListener('mousemove',()=>{
+  const b=document.getElementById('fullscreenBtn');
+  b.classList.remove('hidden'); clearTimeout(fsTimer);
+  fsTimer=setTimeout(()=>b.classList.add('hidden'),3000);
+});
+
+// ═══ ANTI-BURN ════════════════════════════════════════════
+let burnIdx=0;
+const burnShifts=['','shift-1','shift-2','shift-3','shift-4'];
+setInterval(()=>{
+  document.body.classList.remove(...burnShifts);
+  burnIdx=(burnIdx+1)%burnShifts.length;
+  if(burnIdx>0) document.body.classList.add(burnShifts[burnIdx]);
+},60000);
+
+// ═══ AUTO-SCROLL ══════════════════════════════════════════
+function startAutoScroll() {
+  clearInterval(autoScrollInterval);
+  const body=document.getElementById('journalBody');
+  autoScrollInterval=setInterval(()=>{
+    if(!body) return;
+    const max=body.scrollHeight-body.clientHeight;
+    if(max<=0) return;
+    body.scrollTop+=autoScrollDir*1;
+    if(body.scrollTop>=max){autoScrollDir=-1;setTimeout(()=>{autoScrollDir=1;},2500);}
+    if(body.scrollTop<=0) autoScrollDir=1;
+  },40);
+}
+
+// Pause on hover
+setTimeout(()=>{
+  const jb=document.getElementById('journalBody');
+  if(jb){
+    jb.addEventListener('mouseenter',()=>clearInterval(autoScrollInterval));
+    jb.addEventListener('mouseleave',()=>startAutoScroll());
+  }
+},1000);
+
+// ═══ MIDNIGHT RELOAD ══════════════════════════════════════
+function scheduleMidnightReload() {
+  const now=new Date(), target=new Date(now);
+  target.setHours(4,0,0,0);
+  if(target<=now) target.setDate(target.getDate()+1);
+  setTimeout(()=>location.reload(),target-now);
+}
+scheduleMidnightReload();
+
+// ═══ OFFLINE ══════════════════════════════════════════════
+let reconnectInterval=null;
+function setOffline(offline) {
+  if(offline===isOffline) return;
+  isOffline=offline;
+  const banner=document.getElementById('offlineBanner');
+  if(offline){
+    banner.classList.add('visible');
+    if(lastSuccessTime) document.getElementById('offlineTime').textContent=lastSuccessTime.toLocaleTimeString('no-NO',{hour:'2-digit',minute:'2-digit'});
+    clearInterval(reconnectInterval);
+    reconnectInterval=setInterval(()=>loadData(false),10000);
+  } else {
+    banner.classList.remove('visible');
+    clearInterval(reconnectInterval);
+  }
+}
+
+// ═══ RENDER DRIFT ══════════════════════════════════════════
 function renderDrift(items) {
-  const body = document.getElementById('driftBody');
-  const banner = document.getElementById('kritiskBanner');
+  const body=document.getElementById('driftBody');
+  const banner=document.getElementById('kritiskBanner');
+  if(!Array.isArray(items)) items=[];
 
-  if (!items || !Array.isArray(items)) items = [];
-
-  // Normaliser alle felt via spVal()
-  const aktive = items
-    .filter(i => {
-      const aktiv = spVal(i.Aktiv);
-      return aktiv === 'true' || aktiv === '1' || aktiv === 'Yes' || i.Aktiv === true;
-    })
-    .sort((a, b) => {
-      const order = { kritisk: 1, viktig: 2, info: 3 };
-      const ao = order[spVal(a.Viktighetsgrad).toLowerCase()] || 9;
-      const bo = order[spVal(b.Viktighetsgrad).toLowerCase()] || 9;
-      if (ao !== bo) return ao - bo;
-      return new Date(b.Modified || b.Created || 0) - new Date(a.Modified || a.Created || 0);
+  const aktive=items
+    .filter(i=>{const a=spVal(i.Aktiv);return a==='true'||a==='1'||a==='Yes'||i.Aktiv===true;})
+    .sort((a,b)=>{
+      const ord={kritisk:1,viktig:2,info:3};
+      const ao=ord[spVal(a.Viktighetsgrad).toLowerCase()]||9;
+      const bo=ord[spVal(b.Viktighetsgrad).toLowerCase()]||9;
+      if(ao!==bo) return ao-bo;
+      return new Date(b.Modified||b.Created||0)-new Date(a.Modified||a.Created||0);
     });
 
-  const kritisk = aktive.filter(i => spVal(i.Viktighetsgrad).toLowerCase() === 'kritisk').length;
-  const viktig  = aktive.filter(i => spVal(i.Viktighetsgrad).toLowerCase() === 'viktig').length;
-  const info    = aktive.filter(i => spVal(i.Viktighetsgrad).toLowerCase() === 'info').length;
+  const nK=aktive.filter(i=>spVal(i.Viktighetsgrad).toLowerCase()==='kritisk').length;
+  const nV=aktive.filter(i=>spVal(i.Viktighetsgrad).toLowerCase()==='viktig').length;
+  const nI=aktive.filter(i=>spVal(i.Viktighetsgrad).toLowerCase()==='info').length;
 
-  document.getElementById('driftCount').textContent = `${aktive.length} aktive`;
-  document.getElementById('kritiskNum').textContent = kritisk;
-  document.getElementById('viktigNum').textContent  = viktig;
-  document.getElementById('infoNum').textContent    = info;
+  document.getElementById('driftCount').textContent=`${aktive.length} aktive`;
+  document.getElementById('kritiskNum').textContent=nK;
+  document.getElementById('viktigNum').textContent=nV;
+  document.getElementById('infoNum').textContent=nI;
+  document.getElementById('s_kritisk').textContent=nK;
+  document.getElementById('s_viktig').textContent=nV;
+  document.getElementById('s_info').textContent=nI;
 
-  banner.classList.toggle('visible', kritisk > 0);
+  const kCard=document.getElementById('statKritiskCard');
+  const kNum=document.getElementById('statKritisk');
+  kNum.textContent=nK;
+  if(nK>0){kNum.className='stat-big danger';document.getElementById('statKritiskSub').textContent=`${nK} aktiv${nK>1?'e':''} kritisk melding${nK>1?'er':''}`;kCard.style.borderColor='rgba(255,40,40,0.3)';}
+  else{kNum.className='stat-big dim';document.getElementById('statKritiskSub').textContent='Ingen kritiske';kCard.style.borderColor='';}
 
-  if (aktive.length === 0) {
-    body.innerHTML = `<div class="empty-state"><div class="icon">✅</div><div class="text">Ingen aktive driftmeldinger</div></div>`;
-    return;
-  }
+  banner.classList.toggle('visible',nK>0);
 
-  body.innerHTML = aktive.map(item => {
-    const grad    = spVal(item.Viktighetsgrad) || 'Info';
-    const gradLow = grad.toLowerCase();
-    const isKritisk = gradLow === 'kritisk';
-    const kat     = spVal(item.Kategori);
-    const gjelder = spVal(item.Gjelder);
-    const melding = spVal(item.Melding);
-    const title   = spVal(item.Title) || '–';
-    const timeStr = formatTime(item.Modified || item.Created);
-    const emoji   = isKritisk ? '🔴' : gradLow === 'viktig' ? '🟡' : '🔵';
+  // Sound on new kritisk
+  const curIds=new Set(aktive.filter(i=>spVal(i.Viktighetsgrad).toLowerCase()==='kritisk').map(i=>i.ID||i.Id||i.id||i.Title));
+  if(!isFirstRender && [...curIds].some(id=>!lastKritiskIds.has(id))) playAlert();
+  lastKritiskIds=curIds;
 
-    return `
-      <div class="drift-card ${gradLow}${isKritisk ? ' blink-card' : ''}">
-        <div class="card-top">
-          <div class="card-title">${isKritisk ? '🚨 ' : ''}${escHtml(title)}</div>
-          <div class="badge ${gradLow}">${emoji} ${escHtml(grad.toUpperCase())}</div>
-        </div>
-        <div class="card-chips">
-          ${kat     ? `<span class="chip">${kategoriEmoji(kat)} ${escHtml(kat)}</span>` : ''}
-          ${gjelder ? `<span class="chip">📍 ${escHtml(gjelder)}</span>` : ''}
-        </div>
-        ${melding ? `<div class="card-message">${escHtml(melding)}</div>` : ''}
-        <div class="card-footer">
-          <span class="aktiv-badge">⚡ AKTIV</span>
-          <span class="card-time ${isKritisk ? 'kritisk-time' : ''}">${isKritisk ? '🚨 ' : '🕐 '}${timeStr}</span>
-        </div>
-      </div>`;
+  if(aktive.length===0){body.innerHTML=`<div class="empty-state"><div class="icon">✅</div><div class="text">Ingen aktive driftmeldinger</div></div>`;return;}
+
+  const sizeClass=aktive.length<=2?'size-lg':'';
+  body.innerHTML=aktive.map(item=>{
+    const grad=spVal(item.Viktighetsgrad)||'Info';
+    const gradLow=grad.toLowerCase();
+    const isK=gradLow==='kritisk';
+    const kat=spVal(item.Kategori), gjelder=spVal(item.Gjelder), melding=spVal(item.Melding);
+    const title=spVal(item.Title)||'–';
+    const timeStr=formatTime(item.Modified||item.Created);
+    const emoji=isK?'🔴':gradLow==='viktig'?'🟡':'🔵';
+    return `<div class="drift-card ${gradLow}${isK?' blink-card':''} ${sizeClass}">
+      <div class="card-top">
+        <div class="card-title">${isK?'🚨 ':''}${escHtml(title)}</div>
+        <div class="badge ${gradLow}">${emoji} ${escHtml(grad.toUpperCase())}</div>
+      </div>
+      <div class="card-chips">
+        ${kat?`<span class="chip">${kategoriEmoji(kat)} ${escHtml(kat)}</span>`:''}
+        ${gjelder?`<span class="chip">📍 ${escHtml(gjelder)}</span>`:''}
+      </div>
+      ${melding?`<div class="card-message">${escHtml(melding)}</div>`:''}
+      <div class="card-footer">
+        <span class="aktiv-badge">⚡ AKTIV</span>
+        <span class="card-time ${isK?'kritisk-time':''}">${isK?'🚨 ':'🕐 '}${timeStr}</span>
+      </div>
+    </div>`;
   }).join('');
 }
 
-// ── RENDER JOURNAL ────────────────────────────────────────
-// Kolonnenavn fra JSON-formatter:
-//   Bygg, TypeJorunal, SpesifikasjonJournalLooku, Tjenestenummer,
-//   Beskrivelse, Tiltakutf_x00f8_rt, Status, DatoVisning, Created
+// ═══ RENDER JOURNAL ════════════════════════════════════════
 function renderJournal(items) {
-  const body = document.getElementById('journalBody');
+  const body=document.getElementById('journalBody');
+  if(!Array.isArray(items)) items=[];
 
-  if (!items || !Array.isArray(items)) items = [];
+  document.getElementById('journalCount').textContent=`${Math.min(items.length,40)} av ${items.length}`;
+  document.getElementById('totalJournalBar').textContent=items.length;
+  document.getElementById('totalCount').textContent=items.length;
 
-  document.getElementById('journalCount').textContent = `${items.length} oppføringer`;
+  const today=new Date().toDateString();
+  document.getElementById('statJournalToday').textContent=items.filter(i=>new Date(i.Created||0).toDateString()===today).length;
 
-  if (items.length === 0) {
-    body.innerHTML = `<div class="empty-state"><div class="icon">📋</div><div class="text">Ingen hendelser logget</div></div>`;
-    return;
-  }
+  if(items.length===0){body.innerHTML=`<div class="empty-state"><div class="icon">📋</div><div class="text">Ingen hendelser logget</div></div>`;return;}
 
-  const sorted = [...items]
-    .sort((a, b) => new Date(b.Created || 0) - new Date(a.Created || 0))
-    .slice(0, 40);
+  const sorted=[...items].sort((a,b)=>new Date(b.Created||0)-new Date(a.Created||0)).slice(0,40);
 
-  body.innerHTML = sorted.map((item, idx) => {
-    const bygg      = spVal(item.Bygg) || spVal(item.Title) || '–';
-    const type      = spVal(item.TypeJorunal);
-    const spesifik  = spVal(item.SpesifikasjonJournalLooku) || spVal(item['SpesifikasjonJournalLooku.lookupValue']);
-    const tjnr      = spVal(item.Tjenestenummer);
-    const besk      = spVal(item.Beskrivelse);
-    const tiltak    = spVal(item.Tiltakutf_x00f8_rt);
-    const status    = spVal(item.Status);
-    const dato      = spVal(item.DatoVisning) || formatTime(item.Created);
-    const isKritisk = status.toLowerCase().includes('kritisk');
-    const isService = status.toLowerCase().includes('service');
+  const newestId=sorted[0]?.ID||sorted[0]?.Id||sorted[0]?.id;
+  const isNew=!isFirstRender && lastJournalId!==null && newestId!==lastJournalId;
+  if(isNew) playAlert();
+  if(sorted[0]?.Created) { lastJournalCreated=sorted[0].Created; document.getElementById('sisteHendelse').textContent=timeAgo(sorted[0].Created); }
 
-    const tEmoji     = typeEmoji(type);
-    const tClass     = typeChipClass(type);
-    const sPillClass = statusPillClass(status);
-
-    const hasTiltak = tiltak.length > 0;
-    const isUtfort  = status.toLowerCase().includes('utf');
-
-    return `
-      <div class="journal-card${isKritisk ? ' kritisk-card' : isService ? ' service-card' : ''}${idx === 0 ? ' new-entry' : ''}">
-        <div class="journal-top">
-          <div class="journal-title">${isKritisk ? '🚨 ' : ''}${escHtml(bygg)}</div>
-          <div class="journal-time">${escHtml(dato)}</div>
-        </div>
-        <div class="journal-meta">
-          ${type   ? `<span class="chip ${tClass}">${tEmoji} ${escHtml(type)}</span>` : ''}
-          ${spesifik ? `<span class="chip" style="color:#6a7f8f;font-size:10px">${escHtml(spesifik)}</span>` : ''}
-          ${tjnr   ? `<span class="tjenestenummer">👮 # ${escHtml(tjnr)}</span>` : ''}
-          ${status ? `<span class="status-pill ${sPillClass}">${escHtml(status)}</span>` : ''}
-        </div>
-        ${besk ? `<div class="journal-body">${escHtml(besk)}</div>` : ''}
-        ${hasTiltak
-          ? `<div class="journal-tiltak">
-               <div class="journal-tiltak-label">${isUtfort ? '✅ TILTAK UTFØRT' : '🔄 TILTAK REGISTRERT'}</div>
-               ${escHtml(tiltak)}
-             </div>`
-          : (!isUtfort ? `<div class="journal-no-tiltak">⚠️ Ingen tiltak registrert</div>` : '')
-        }
-      </div>`;
-  }).join('');
-}
-
-// ── DATA FETCH ────────────────────────────────────────────
-async function loadData(isInitial = false) {
-  const dot = document.getElementById('refreshDot');
-  if (dot) dot.classList.add('syncing');
-
-  try {
-    const res = await fetch(apiUrl, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('Flow svarte:', res.status, errText);
-      throw new Error(`HTTP ${res.status}`);
-    }
-
-    const textData = await res.text();
-    let data;
-    try {
-      data = JSON.parse(textData);
-    } catch (e) {
-      console.error('Ugyldig JSON fra Flow:', textData);
-      throw new Error('Ugyldig JSON');
-    }
-
-    // Håndter hvis Flow pakker inn i et body-objekt
-    if (data.body && (data.body.drift !== undefined || data.body.journal !== undefined)) {
-      data = data.body;
-    }
-
-    console.log('Data mottatt – drift:', (data.drift || []).length, 'journal:', (data.journal || []).length);
-    // Debug: logg første element slik vi ser kolonnenavnene
-    if ((data.drift || []).length > 0)   console.log('Drift eksempel:', data.drift[0]);
-    if ((data.journal || []).length > 0) console.log('Journal eksempel:', data.journal[0]);
-
-    renderDrift(data.drift || []);
-    renderJournal(data.journal || []);
-
-    document.getElementById('lastUpdated').textContent =
-      new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    if (isInitial) {
-      document.getElementById('configOverlay').style.opacity = '0';
-      setTimeout(() => document.getElementById('configOverlay').style.display = 'none', 300);
-      clearInterval(refreshInterval);
-      refreshInterval = setInterval(() => loadData(false), 30000);
-      startCountdown();
-    }
-
-  } catch (err) {
-    console.error('Fetch error:', err);
-    if (isInitial) {
-      const errorEl = document.getElementById('configError');
-      errorEl.style.display = 'block';
-      errorEl.textContent = `Feil: ${err.message}. Sjekk konsollen (F12).`;
-    }
-  } finally {
-    if (dot) setTimeout(() => dot.classList.remove('syncing'), 1200);
-  }
-}
-
-// ── START ─────────────────────────────────────────────────
-function startLive() {
-  apiUrl = document.getElementById('apiUrl').value.trim();
-  if (!apiUrl) { alert('Fyll inn Power Automate Flow URL'); return; }
-
-  const btn = document.querySelector('.config-btn');
-  btn.textContent = 'Laster data...';
-  btn.disabled = true;
-
-  loadData(true).finally(() => {
-    btn.textContent = '🚀 Start live wallboard';
-    btn.disabled = false;
+  // Date groups
+  const groups=[];
+  let lastLabel=null;
+  sorted.forEach((item,idx)=>{
+    const d=new Date(item.Created||0), now=new Date();
+    let label;
+    if(d.toDateString()===now.toDateString()) label='I DAG';
+    else { const y=new Date();y.setDate(y.getDate()-1); label=d.toDateString()===y.toDateString()?'I GÅR':d.toLocaleDateString('no-NO',{weekday:'short',day:'numeric',month:'short'}).toUpperCase(); }
+    if(label!==lastLabel){groups.push({type:'sep',label});lastLabel=label;}
+    groups.push({type:'item',item,idx,isNew:idx===0&&isNew});
   });
+
+  body.innerHTML=groups.map(g=>{
+    if(g.type==='sep') return `<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-label">${g.label}</div><div class="date-sep-line"></div></div>`;
+    const {item,idx,isNew:isNewEntry}=g;
+    const bygg=spVal(item.Bygg)||spVal(item.Title)||'–';
+    const type=spVal(item.TypeJorunal);
+    const spesifik=spVal(item.SpesifikasjonJournalLooku)||spVal(item['SpesifikasjonJournalLooku.lookupValue']);
+    const tjnr=spVal(item.Tjenestenummer), besk=spVal(item.Beskrivelse);
+    const tiltak=spVal(item.Tiltakutf_x00f8_rt), status=spVal(item.Status);
+    const dato=spVal(item.DatoVisning)||formatTime(item.Created);
+    const isK=status.toLowerCase().includes('kritisk'), isS=status.toLowerCase().includes('service');
+    const isUtfort=status.toLowerCase().includes('utf'), hasTiltak=tiltak.length>0;
+    const zebraClass=idx%2===1?' zebra':'';
+    return `<div class="journal-card${isK?' kritisk-card':isS?' service-card':''}${zebraClass}${isNewEntry?' flash-new new-entry':''}">
+      <div class="journal-top">
+        <div class="journal-title">${isK?'🚨 ':''}${escHtml(bygg)}</div>
+        <div class="journal-time">${escHtml(dato)}</div>
+      </div>
+      <div class="journal-meta">
+        ${type?`<span class="chip ${typeChipClass(type)}">${typeEmoji(type)} ${escHtml(type)}</span>`:''}
+        ${spesifik?`<span class="chip" style="color:#6a7f8f;font-size:9px">${escHtml(spesifik)}</span>`:''}
+        ${tjnr?`<span class="tjenestenummer">👮 # ${escHtml(tjnr)}</span>`:''}
+        ${status?`<span class="status-pill ${statusPillClass(status)}">${escHtml(status)}</span>`:''}
+      </div>
+      ${besk?`<div class="journal-body">${escHtml(besk)}</div>`:''}
+      ${hasTiltak?`<div class="journal-tiltak"><div class="journal-tiltak-label">${isUtfort?'✅ TILTAK UTFØRT':'🔄 TILTAK REGISTRERT'}</div>${escHtml(tiltak)}</div>`:(!isUtfort?`<div class="journal-no-tiltak">⚠️ Ingen tiltak registrert</div>`:'')}
+    </div>`;
+  }).join('');
+
+  // Typewriter on newest
+  if(isNew) {
+    const firstCard=body.querySelector('.journal-card');
+    if(firstCard){const titleEl=firstCard.querySelector('.journal-title');if(titleEl){const txt=titleEl.textContent;typewriterEffect(titleEl,txt);}}
+    body.scrollTop=0;
+    setTimeout(()=>startAutoScroll(),4000);
+  }
+
+  lastJournalId=newestId;
 }
 
-window.onload = () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const autoUrl = urlParams.get('url');
-  if (autoUrl) {
-    document.getElementById('apiUrl').value = autoUrl;
-    startLive();
+// ═══ FETCH ════════════════════════════════════════════════
+async function loadData(isInitial=false) {
+  const dot=document.getElementById('refreshDot');
+  if(dot) dot.classList.add('syncing');
+  try {
+    const res=await fetch(apiUrl,{method:'GET',headers:{'Accept':'application/json'}});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text=await res.text();
+    let data;
+    try{data=JSON.parse(text);}catch(e){throw new Error('Ugyldig JSON');}
+    if(data.body&&(data.body.drift!==undefined||data.body.journal!==undefined)) data=data.body;
+
+    lastSuccessTime=new Date();
+    setOffline(false);
+    renderDrift(data.drift||[]);
+    renderJournal(data.journal||[]);
+    isFirstRender=false;
+    triggerRadar();
+
+    document.getElementById('lastUpdated').textContent=lastSuccessTime.toLocaleTimeString('no-NO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+    if(isInitial){
+      document.getElementById('configOverlay').style.opacity='0';
+      setTimeout(()=>document.getElementById('configOverlay').style.display='none',300);
+      clearInterval(refreshInterval);
+      refreshInterval=setInterval(()=>loadData(false),30000);
+      startCountdown();
+      startAutoScroll();
+    }
+  } catch(err) {
+    console.error('Fetch error:',err);
+    setOffline(true);
+    if(isInitial){const el=document.getElementById('configError');el.style.display='block';el.textContent=`Feil: ${err.message}`;}
+  } finally {
+    if(dot) setTimeout(()=>dot.classList.remove('syncing'),1200);
   }
+}
+
+// ═══ START ════════════════════════════════════════════════
+function startLive() {
+  apiUrl=document.getElementById('apiUrl').value.trim();
+  if(!apiUrl){alert('Fyll inn Power Automate Flow URL');return;}
+  const btn=document.querySelector('.config-btn');
+  btn.textContent='Laster data...'; btn.disabled=true;
+  loadData(true).finally(()=>{btn.textContent='🚀 Start live wallboard';btn.disabled=false;});
+}
+
+window.onload=()=>{
+  const p=new URLSearchParams(window.location.search), u=p.get('url');
+  if(u){document.getElementById('apiUrl').value=u;startLive();}
 };
 </script>
 </body>

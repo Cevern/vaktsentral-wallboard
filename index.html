@@ -768,7 +768,7 @@ function renderDrift(items) {
   }
 
   body.innerHTML = aktive.map(item => {
-    const grad = item.Viktighetsgrad || 'Info';
+    const grad = String(item.Viktighetsgrad || 'Info');
     const gradLow = grad.toLowerCase();
     const emoji = viktEmoji(grad);
     const katEmoji = kategoriEmoji(item.Kategori);

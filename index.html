@@ -475,6 +475,7 @@
     justify-content: center;
     z-index: 100;
     backdrop-filter: blur(4px);
+    transition: opacity 0.3s;
   }
 
   .config-box {
@@ -555,21 +556,15 @@
   }
 
   .config-btn:hover { background: #4499ff; box-shadow: 0 0 20px rgba(45,139,255,0.4); }
-
-  .demo-btn {
-    width: 100%;
-    padding: 10px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    margin-top: 8px;
-    transition: border-color 0.2s, color 0.2s;
+  
+  .error-text {
+    color: var(--kritisk);
+    font-size: 12px;
+    margin-top: 10px;
+    text-align: center;
+    display: none;
   }
 
-  .demo-btn:hover { border-color: var(--text-secondary); color: #fff; }
 </style>
 </head>
 <body>
@@ -577,27 +572,17 @@
 <!-- CONFIG OVERLAY -->
 <div class="config-overlay" id="configOverlay">
   <div class="config-box">
-    <div class="config-title">⚙️ Wallboard Oppsett</div>
-    <div class="config-sub">Kjører direkte i SharePoint. Trykk start!</div>
+    <div class="config-title">⚙️ Wallboard Oppsett (API)</div>
+    <div class="config-sub">Siden er tilkoblet via Power Automate.</div>
 
     <div class="config-field">
-      <label class="config-label">SharePoint Site URL</label>
-      <input class="config-input" id="siteUrl" value="/sites/Vaktsentral" />
-      <div class="config-hint">Relativ sti til din SharePoint-side (f.eks /sites/Vaktsentral)</div>
-    </div>
-
-    <div class="config-field">
-      <label class="config-label">Driftmeldinger – Liste-ID eller navn</label>
-      <input class="config-input" id="driftList" placeholder="Vaktsentral Nyhetsoppslag" value="Vaktsentral Nyhetsoppslag" />
-    </div>
-
-    <div class="config-field">
-      <label class="config-label">Journal – Liste-ID eller navn</label>
-      <input class="config-input" id="journalList" placeholder="Vaktsentral_Journal" value="Vaktsentral_Journal" />
+      <label class="config-label">Power Automate Flow URL</label>
+      <input class="config-input" id="apiUrl" value="https://default9581cfe206ce40b7953a69a246f834.a8.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/058fccf9c6db4e66a84f3a59d5e05475/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=6s1mq12Vz9rCEpVfr87r3j1CKUx1k4JYkrTYmqG4s_E" />
+      <div class="config-hint">Limer inn URLen til flowen din her.</div>
     </div>
 
     <button class="config-btn" onclick="startLive()">🚀 Start live wallboard</button>
-    <button class="demo-btn" onclick="startDemo()">👁️ Vis demo med testdata</button>
+    <div class="error-text" id="configError">Kunne ikke hente data. Sjekk at URLen stemmer og at Flowen er aktivert.</div>
   </div>
 </div>
 
@@ -691,7 +676,7 @@
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────
-let CONFIG = { siteUrl: '', driftList: '', journalList: '', mode: 'live' };
+let apiUrl = '';
 let refreshInterval = null;
 let countdownInterval = null;
 let countdown = 30;
@@ -754,6 +739,8 @@ function renderDrift(items) {
   const body = document.getElementById('driftBody');
   const banner = document.getElementById('kritiskBanner');
 
+  if (!items || !Array.isArray(items)) items = [];
+
   const aktive = items
     .filter(i => i.Aktiv)
     .sort((a, b) => {
@@ -810,6 +797,9 @@ function renderDrift(items) {
 // ── RENDER JOURNAL ───────────────────────────────────────
 function renderJournal(items) {
   const body = document.getElementById('journalBody');
+  
+  if (!items || !Array.isArray(items)) items = [];
+  
   document.getElementById('journalCount').textContent = `${items.length} oppføringer`;
 
   if (items.length === 0) {
@@ -848,98 +838,80 @@ function escHtml(str) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── FETCH FROM SHAREPOINT ────────────────────────────────
-async function fetchList(siteUrl, listName, filter = '') {
-  const base = siteUrl.replace(/\/$/, '');
-  let url = `${base}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$top=50&$orderby=Created desc`;
-  if (filter) url += `&$filter=${filter}`;
-  const res = await fetch(url, {
-    headers: { 'Accept': 'application/json;odata=nometadata' }
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${listName}`);
-  const data = await res.json();
-  return data.value || [];
-}
-
-async function loadData() {
-  if (CONFIG.mode === 'demo') { loadDemo(); return; }
-
+// ── FETCH FROM POWER AUTOMATE FLOW ────────────────────────
+async function loadData(isInitial = false) {
   const dot = document.getElementById('refreshDot');
-  dot.classList.add('syncing');
-  setTimeout(() => dot.classList.remove('syncing'), 1200);
-
+  if(dot) dot.classList.add('syncing');
+  
   try {
-    const [drift, journal] = await Promise.all([
-      fetchList(CONFIG.siteUrl, CONFIG.driftList),
-      fetchList(CONFIG.siteUrl, CONFIG.journalList)
-    ]);
-    renderDrift(drift);
-    renderJournal(journal);
+    const res = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    const data = await res.json();
+    
+    renderDrift(data.drift || []);
+    renderJournal(data.journal || []);
+    
     document.getElementById('lastUpdated').textContent =
       new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+    if (isInitial) {
+      document.getElementById('configOverlay').style.opacity = '0';
+      setTimeout(() => document.getElementById('configOverlay').style.display = 'none', 300);
+      
+      // Start intervals only on successful initial load
+      clearInterval(refreshInterval);
+      refreshInterval = setInterval(() => loadData(false), 30000);
+      startCountdown();
+    }
+    
   } catch (err) {
     console.error('Fetch error:', err);
-    document.getElementById('driftBody').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div><div class="text">Kunne ikke laste data</div></div>`;
+    if (isInitial) {
+      const errorEl = document.getElementById('configError');
+      errorEl.style.display = 'block';
+      errorEl.textContent = "Kunne ikke hente data. Har Flowen kjørt riktig?";
+    } else {
+      // Mute error UI if it happens during background refresh
+      console.warn("Background refresh failed, retrying on next tick.");
+    }
+  } finally {
+    if(dot) setTimeout(() => dot.classList.remove('syncing'), 1200);
   }
-
-  startCountdown();
-}
-
-// ── DEMO DATA ────────────────────────────────────────────
-function loadDemo() {
-  const driftDemo = [
-    { Title: 'Heisalarm – CC Vest', Viktighetsgrad: 'Kritisk', Aktiv: true,
-      Kategori: 'Alarm', Gjelder: 'CC Vest', Modified: new Date().toISOString(),
-      Melding: 'Heis nr. 3 har utløst nødstopp. Tekniker er varslet og på vei. Ikke bruk heisen.' },
-    { Title: 'Ny kode til nøkkelboks', Viktighetsgrad: 'Viktig', Aktiv: true,
-      Kategori: 'Kode', Gjelder: 'LV8 Garasje', Modified: new Date(Date.now()-3600000).toISOString(),
-      Melding: 'Kode endret fra 18:00 i dag. Gammel kode er deaktivert. Ny kode i låst konvolutt på vaktrommet.' },
-    { Title: 'Kameraoppdatering', Viktighetsgrad: 'Info', Aktiv: true,
-      Kategori: 'Kamera', Gjelder: 'Hele porteføljen', Modified: new Date(Date.now()-7200000).toISOString(),
-      Melding: 'Planlagt vedlikehold på kamerasystemet lørdag 01:00–03:00. Kameraer vil være nede i perioden.' }
-  ];
-  const journalDemo = [
-    { Title: 'Patrulje – CC Vest parkering', Created: new Date().toISOString(),
-      Status: 'Fullført', Kategori: 'Patrulje', Sted: 'CC Vest',
-      Beskrivelse: 'Rutinepatrulje fullført. Ingen avvik observert.' },
-    { Title: 'Innbruddsforsøk garasje LV8', Created: new Date(Date.now()-1800000).toISOString(),
-      Status: 'Under behandling', Kategori: 'Innbrudd', Sted: 'LV8',
-      Beskrivelse: 'Forsøk på å bryte seg inn via garasjeport. Politi varslet, ref. 2024-110234.' },
-    { Title: 'Besøkende – leietaker Acme AS', Created: new Date(Date.now()-3600000).toISOString(),
-      Status: 'Fullført', Kategori: 'Adgang', Sted: 'LV8 3. etg',
-      Beskrivelse: 'Besøkende registrert og eskortert til møterom 3B.' },
-    { Title: 'Brannvarsel – automatisk', Created: new Date(Date.now()-5400000).toISOString(),
-      Status: 'Avklart', Kategori: 'Alarm', Sted: 'CC Vest kjøkken',
-      Beskrivelse: 'Automatisk brannvarsel utløst av matos. Ingen fare. Reset utført.' },
-    { Title: 'Vaktbytte – dagvakt til kveldsvakt', Created: new Date(Date.now()-7200000).toISOString(),
-      Status: 'Fullført', Kategori: 'Rutine', Sted: 'Vaktrom',
-      Beskrivelse: 'Normalt vaktbytte. Ingen pågående hendelser ved overleveringen.' }
-  ];
-  renderDrift(driftDemo);
-  renderJournal(journalDemo);
-  document.getElementById('lastUpdated').textContent =
-    new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  startCountdown();
 }
 
 // ── START FUNCTIONS ───────────────────────────────────────
 function startLive() {
-  CONFIG.siteUrl    = document.getElementById('siteUrl').value.trim();
-  CONFIG.driftList  = document.getElementById('driftList').value.trim();
-  CONFIG.journalList= document.getElementById('journalList').value.trim();
-  CONFIG.mode = 'live';
-  if (!CONFIG.siteUrl) { alert('Fyll inn SharePoint Site URL'); return; }
-  document.getElementById('configOverlay').style.display = 'none';
-  loadData();
-  refreshInterval = setInterval(loadData, 30000);
+  apiUrl = document.getElementById('apiUrl').value.trim();
+  if (!apiUrl) { 
+    alert('Fyll inn Power Automate Flow URL'); 
+    return; 
+  }
+  
+  const btn = document.querySelector('.config-btn');
+  btn.textContent = "Laster data...";
+  btn.disabled = true;
+  
+  loadData(true).finally(() => {
+    btn.textContent = "🚀 Start live wallboard";
+    btn.disabled = false;
+  });
 }
 
-function startDemo() {
-  CONFIG.mode = 'demo';
-  document.getElementById('configOverlay').style.display = 'none';
-  loadData();
-  refreshInterval = setInterval(loadData, 30000);
+// Check if URL is in query string on load (for easy bookmarking)
+window.onload = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const autoUrl = urlParams.get('url');
+  if (autoUrl) {
+    document.getElementById('apiUrl').value = autoUrl;
+    startLive();
+  }
 }
 </script>
 </body>

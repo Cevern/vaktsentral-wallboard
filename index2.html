@@ -3,816 +3,709 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vaktsentral – Command Center</title>
+<title>Vaktsentral – Asana Oppgaver</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #060b12;
-    --bg-panel: #0a1018;
+    --bg-panel: #080e16;
     --bg-card: #0d1520;
     --border: rgba(255,255,255,0.07);
     --kritisk: #ff2828;
-    --kritisk-glow: rgba(255,40,40,0.20);
     --viktig: #f5a623;
-    --viktig-glow: rgba(245,166,35,0.15);
     --info: #2d8bff;
-    --info-glow: rgba(45,139,255,0.12);
     --aktiv: #00d4aa;
+    --asana: #fc602c;
     --text-primary: #eef4fb;
     --text-secondary: #7a9bb5;
     --text-dim: #3d5568;
-    --accent-line: rgba(45,139,255,0.3);
   }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text-primary); font-family:'Barlow',sans-serif; height:100vh; overflow:hidden; display:flex; flex-direction:column; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* ── BANNERS ── */
+  .offline-banner { display:none; align-items:center; justify-content:center; gap:10px; padding:6px 20px; background:rgba(255,40,40,0.18); border-bottom:1px solid rgba(255,40,40,0.4); font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:900; letter-spacing:1.5px; color:#ff6060; text-transform:uppercase; flex-shrink:0; animation:banner-pulse 1.5s ease-in-out infinite; }
+  .offline-banner.visible { display:flex; }
+  .overdue-banner { display:none; align-items:center; justify-content:center; gap:12px; padding:7px 20px; background:rgba(255,40,40,0.12); border-bottom:1px solid rgba(255,40,40,0.30); font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:900; letter-spacing:2px; color:#ff5555; text-transform:uppercase; animation:banner-pulse 1.5s ease-in-out infinite; flex-shrink:0; }
+  .overdue-banner.visible { display:flex; }
+  .holiday-banner { display:none; align-items:center; justify-content:center; gap:10px; padding:5px 20px; background:rgba(245,166,35,0.10); border-bottom:1px solid rgba(245,166,35,0.20); font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; letter-spacing:1.5px; color:#ffd080; flex-shrink:0; }
+  .holiday-banner.visible { display:flex; }
+  @keyframes banner-pulse { 0%,100%{background:rgba(255,40,40,0.12)} 50%{background:rgba(255,40,40,0.24)} }
 
-  body {
-    background: var(--bg);
-    color: var(--text-primary);
-    font-family: 'Barlow', sans-serif;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* ── TOP BAR ── */
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 28px;
-    height: 52px;
-    background: #070d14;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  .topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .logo-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--aktiv);
-    box-shadow: 0 0 8px var(--aktiv);
-    animation: pulse-dot 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--aktiv); }
-    50% { opacity: 0.5; box-shadow: 0 0 3px var(--aktiv); }
-  }
-
-  .topbar-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--text-primary);
-  }
-
-  .topbar-subtitle {
-    font-size: 12px;
-    color: var(--text-secondary);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-
-  .clock {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 22px;
-    color: var(--text-primary);
-    letter-spacing: 2px;
-  }
-
-  .date {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    color: var(--text-secondary);
-    letter-spacing: 1px;
-    text-align: right;
-  }
-
-  .refresh-indicator {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 0.5px;
-  }
-
-  .refresh-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--text-dim);
-  }
-
-  .refresh-dot.syncing {
-    background: var(--aktiv);
-    box-shadow: 0 0 6px var(--aktiv);
-    animation: blink 0.4s ease-in-out 3;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-  }
+  /* ── TOPBAR ── */
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:0 22px; height:66px; background:#070d14; border-bottom:1px solid var(--border); flex-shrink:0; position:relative; }
+  .topbar-left { display:flex; align-items:center; gap:14px; }
+  .logo-wrap { position:relative; width:22px; height:22px; display:flex; align-items:center; justify-content:center; }
+  .logo-dot { width:10px; height:10px; border-radius:50%; background:var(--asana); box-shadow:0 0 8px var(--asana); animation:pulse-dot 2s ease-in-out infinite; position:relative; z-index:2; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;box-shadow:0 0 8px var(--asana)} 50%{opacity:0.5;box-shadow:0 0 3px var(--asana)} }
+  .radar-ring { position:absolute; border-radius:50%; border:1.5px solid var(--asana); opacity:0; pointer-events:none; }
+  .radar-ring.active { animation:radar-expand 0.9s ease-out forwards; }
+  @keyframes radar-expand { 0%{width:10px;height:10px;opacity:0.9} 100%{width:44px;height:44px;opacity:0} }
+  .topbar-branding { display:flex; flex-direction:column; }
+  .topbar-title { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; letter-spacing:3px; text-transform:uppercase; color:var(--text-primary); line-height:1.1; }
+  .topbar-subtitle { font-size:11px; color:var(--text-secondary); letter-spacing:1.5px; text-transform:uppercase; }
+  .asana-badge { display:flex; align-items:center; gap:6px; background:rgba(252,96,44,0.12); border:1px solid rgba(252,96,44,0.25); border-radius:6px; padding:4px 10px; font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:900; letter-spacing:1.5px; color:var(--asana); text-transform:uppercase; }
+  .asana-badge-dot { width:6px; height:6px; border-radius:50%; background:var(--asana); box-shadow:0 0 5px var(--asana); animation:pulse-dot 2s ease-in-out infinite; }
+  .topbar-center { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:22px; align-items:center; }
+  .meta-block { display:flex; flex-direction:column; align-items:center; gap:1px; }
+  .meta-label { font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-dim); }
+  .meta-value { font-family:'Share Tech Mono',monospace; font-size:13px; color:var(--text-secondary); }
+  .meta-value.red { color:var(--kritisk); }
+  .meta-value.amber { color:var(--viktig); }
+  .meta-value.green { color:var(--aktiv); }
+  .meta-divider { width:1px; height:26px; background:var(--border); }
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .nav-btn { background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:5px; padding:6px 12px; color:var(--text-secondary); cursor:pointer; font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-decoration:none; transition:all 0.2s; display:flex; align-items:center; gap:5px; }
+  .nav-btn:hover { border-color:var(--aktiv); color:var(--aktiv); }
+  .fullscreen-btn { background:none; border:1px solid var(--border); border-radius:5px; padding:5px 8px; color:var(--text-dim); cursor:pointer; font-size:15px; transition:all 0.2s; }
+  .fullscreen-btn:hover { border-color:var(--text-secondary); color:var(--text-secondary); }
+  .clock-block { text-align:right; }
+  .clock { font-family:'Share Tech Mono',monospace; font-size:32px; color:var(--text-primary); letter-spacing:3px; line-height:1; }
+  .date { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--text-secondary); letter-spacing:1px; margin-top:2px; }
 
   /* ── MAIN LAYOUT ── */
-  .main {
-    display: grid;
-    grid-template-columns: 1fr 1.6fr;
-    grid-template-rows: 1fr;
-    gap: 0;
-    flex: 1;
-    overflow: hidden;
-  }
+  .main { display:grid; grid-template-columns:280px 1fr; grid-template-rows:1fr 44px; flex:1; overflow:hidden; }
 
-  /* ── PANELS ── */
-  .panel {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border-right: 1px solid var(--border);
-  }
+  /* ── STATS SIDEBAR ── */
+  .stats-sidebar { display:flex; flex-direction:column; overflow:hidden; border-right:1px solid var(--border); background:var(--bg-panel); grid-row:1; }
+  .stats-header { display:flex; align-items:center; gap:8px; padding:10px 16px; border-bottom:1px solid var(--border); font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:var(--text-secondary); flex-shrink:0; }
+  .stats-body { flex:1; overflow-y:auto; padding:12px 11px; display:flex; flex-direction:column; gap:9px; scrollbar-width:none; }
+  .stats-body::-webkit-scrollbar { display:none; }
 
-  .panel:last-child { border-right: none; }
+  .stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:12px 14px; }
+  .stat-card-label { font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-dim); margin-bottom:7px; }
+  .stat-big { font-family:'Share Tech Mono',monospace; font-size:34px; line-height:1; color:var(--text-secondary); }
+  .stat-big.red { color:var(--kritisk); }
+  .stat-big.green { color:var(--aktiv); }
+  .stat-sub { font-size:11px; color:var(--text-dim); margin-top:3px; }
 
-  .panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--border);
-    background: #080e16;
-    flex-shrink: 0;
-  }
+  .stat-row { display:flex; align-items:center; justify-content:space-between; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+  .stat-row:last-child { border-bottom:none; }
+  .stat-row-label { font-size:11px; color:var(--text-secondary); display:flex; align-items:center; gap:5px; }
+  .stat-row-val { font-family:'Share Tech Mono',monospace; font-size:13px; font-weight:700; color:var(--text-primary); }
+  .stat-row-val.red { color:var(--kritisk); }
+  .stat-row-val.amber { color:var(--viktig); }
+  .stat-row-val.green { color:var(--aktiv); }
 
-  .panel-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-  }
+  .progress-wrap { margin-top:9px; }
+  .progress-label { display:flex; justify-content:space-between; margin-bottom:4px; font-size:10px; color:var(--text-dim); }
+  .progress-bar { height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:2px; transition:width 0.6s ease; }
+  .progress-fill.green { background:var(--aktiv); }
+  .progress-fill.amber { background:var(--viktig); }
+  .progress-fill.red   { background:var(--kritisk); }
 
-  .panel-title-icon { font-size: 15px; }
+  .project-list { display:flex; flex-direction:column; gap:3px; }
+  .project-row { display:flex; align-items:center; justify-content:space-between; padding:6px 8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); cursor:pointer; transition:all 0.15s; }
+  .project-row:hover { background:rgba(255,255,255,0.06); }
+  .project-row.active { background:rgba(252,96,44,0.08); border-color:rgba(252,96,44,0.2); }
+  .project-row-name { font-size:11px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+  .project-row-count { font-family:'Share Tech Mono',monospace; font-size:11px; font-weight:700; color:var(--text-dim); background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:999px; flex-shrink:0; margin-left:6px; }
+  .project-row-count.danger { color:var(--kritisk); background:rgba(255,40,40,0.12); }
 
-  .panel-count {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-  }
+  .refresh-bar { display:flex; align-items:center; gap:6px; padding:8px 12px; border-top:1px solid var(--border); flex-shrink:0; font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim); }
+  .refresh-dot { width:5px; height:5px; border-radius:50%; background:var(--text-dim); flex-shrink:0; }
+  .refresh-dot.syncing { background:var(--aktiv); box-shadow:0 0 5px var(--aktiv); animation:blink 0.4s ease-in-out 3; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-  .panel-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
+  /* ── TASK COLUMN ── */
+  .task-column { display:flex; flex-direction:column; overflow:hidden; grid-row:1; }
+  .task-column-header { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; border-bottom:1px solid var(--border); background:#080e16; flex-shrink:0; }
+  .task-column-title { display:flex; align-items:center; gap:8px; font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:var(--text-secondary); }
+  .task-column-count { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--text-dim); }
+  .task-body { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:10px; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+  .task-body::-webkit-scrollbar { width:3px; }
+  .task-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 
-  /* ── DRIFT CARDS ── */
-  .drift-card {
-    border-radius: 8px;
-    padding: 14px 16px;
-    border: 1px solid var(--border);
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.15s ease;
-  }
+  /* ── TASK CARDS ── */
+  .task-card { border-radius:10px; padding:16px 18px; background:var(--bg-card); border:1px solid var(--border); border-left:4px solid var(--text-dim); position:relative; flex-shrink:0; transition:border-color 0.2s, box-shadow 0.2s; }
+  .task-card:hover { border-color:rgba(255,255,255,0.14); }
+  .task-card.overdue { border-left-color:var(--kritisk); background:linear-gradient(135deg,rgba(19,6,8,0.9) 0%,var(--bg-card) 100%); animation:overdue-pulse 3s ease-in-out infinite; }
+  .task-card.due-today { border-left-color:var(--viktig); background:linear-gradient(135deg,rgba(17,14,4,0.9) 0%,var(--bg-card) 100%); }
+  .task-card.due-week { border-left-color:var(--info); }
+  .task-card.future { border-left-color:var(--text-dim); opacity:0.85; }
+  .task-card.done { border-left-color:var(--aktiv); opacity:0.55; }
+  .task-card.new-entry { animation:slide-in 0.35s ease-out; }
+  @keyframes overdue-pulse { 0%,100%{box-shadow:0 0 0 rgba(255,40,40,0)} 50%{box-shadow:0 0 22px rgba(255,40,40,0.18)} }
+  @keyframes slide-in { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
 
-  .drift-card::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 5px;
-  }
+  .task-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:9px; }
+  .task-name { font-size:17px; font-weight:900; color:#fff; flex:1; line-height:1.25; }
+  .task-name.done-name { text-decoration:line-through; color:var(--text-secondary); }
 
-  .drift-card.kritisk {
-    background: linear-gradient(135deg, #130608 0%, #0d1520 100%);
-    border-color: rgba(255,40,40,0.20);
-    box-shadow: 0 0 20px rgba(255,40,40,0.12), inset 0 0 40px rgba(255,40,40,0.03);
-  }
+  .due-pill { font-family:'Share Tech Mono',monospace; font-size:11px; padding:3px 10px; border-radius:999px; white-space:nowrap; flex-shrink:0; font-weight:700; }
+  .due-pill.overdue { background:rgba(255,40,40,0.2); color:#ff7070; border:1px solid rgba(255,40,40,0.35); }
+  .due-pill.today    { background:rgba(245,166,35,0.2); color:#ffd080; border:1px solid rgba(245,166,35,0.35); }
+  .due-pill.week     { background:rgba(45,139,255,0.15); color:#7fb4ff; border:1px solid rgba(45,139,255,0.3); }
+  .due-pill.future   { background:rgba(255,255,255,0.05); color:var(--text-dim); border:1px solid rgba(255,255,255,0.08); }
+  .due-pill.done-pill { background:rgba(0,212,170,0.12); color:var(--aktiv); border:1px solid rgba(0,212,170,0.25); }
+  .due-pill.no-due   { background:rgba(255,255,255,0.04); color:var(--text-dim); border:1px solid rgba(255,255,255,0.06); }
 
-  .drift-card.kritisk::before { background: var(--kritisk); box-shadow: 2px 0 12px rgba(255,40,40,0.5); }
+  .task-notes { font-size:13px; color:var(--text-secondary); line-height:1.5; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; margin-bottom:10px; }
 
-  .drift-card.kritisk.blink-card {
-    animation: kritisk-pulse 2.5s ease-in-out infinite;
-  }
+  .task-chips { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px; }
+  .chip { font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; }
+  .chip.tag    { background:rgba(245,166,35,0.1); color:#ffd080; }
+  .chip.proj   { background:rgba(176,136,255,0.1); color:#c4a8ff; }
+  .chip.custom { background:rgba(255,255,255,0.06); color:var(--text-secondary); }
 
-  @keyframes kritisk-pulse {
-    0%, 100% { box-shadow: 0 0 20px rgba(255,40,40,0.12), inset 0 0 40px rgba(255,40,40,0.03); }
-    50% { box-shadow: 0 0 35px rgba(255,40,40,0.28), inset 0 0 60px rgba(255,40,40,0.07); }
-  }
+  .task-footer { display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05); gap:8px; }
+  .task-assignee { display:flex; align-items:center; gap:8px; flex:1; overflow:hidden; }
+  .avatar { width:22px; height:22px; border-radius:50%; background:rgba(45,139,255,0.25); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:900; color:#7fb4ff; flex-shrink:0; }
+  .assignee-name { font-size:12px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .project-label { font-size:10px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; text-align:center; }
+  .open-link { font-size:11px; color:var(--text-dim); text-decoration:none; padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.07); transition:all 0.15s; white-space:nowrap; flex-shrink:0; }
+  .open-link:hover { border-color:rgba(252,96,44,0.4); color:var(--asana); }
 
-  .drift-card.viktig {
-    background: linear-gradient(135deg, #110e04 0%, #0d1520 100%);
-    border-color: rgba(245,166,35,0.15);
-    box-shadow: 0 0 16px rgba(245,166,35,0.08);
-  }
-
-  .drift-card.viktig::before { background: var(--viktig); box-shadow: 2px 0 10px rgba(245,166,35,0.4); }
-
-  .drift-card.info {
-    background: var(--bg-card);
-    border-color: rgba(45,139,255,0.12);
-  }
-
-  .drift-card.info::before { background: var(--info); }
-
-  .card-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    gap: 10px;
-  }
-
-  .card-title {
-    font-size: 15px;
-    font-weight: 900;
-    color: #fff;
-    letter-spacing: 0.2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 1;
-  }
-
-  .badge {
-    font-size: 10px;
-    font-weight: 900;
-    padding: 4px 10px;
-    border-radius: 5px;
-    letter-spacing: 0.8px;
-    white-space: nowrap;
-    font-family: 'Barlow Condensed', sans-serif;
-  }
-
-  .badge.kritisk { background: rgba(255,40,40,0.20); color: #ff6060; }
-  .badge.viktig  { background: rgba(245,166,35,0.20); color: #ffd080; }
-  .badge.info    { background: rgba(45,139,255,0.18); color: #7fb4ff; }
-
-  .card-chips {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 8px;
-  }
-
-  .chip {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 5px;
-    background: rgba(255,255,255,0.07);
-    color: #8fafc8;
-    letter-spacing: 0.2px;
-  }
-
-  .card-message {
-    font-size: 13px;
-    color: #ccdde8;
-    line-height: 1.5;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-  }
-
-  .card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 10px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-  }
-
-  .aktiv-badge {
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 1px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    background: rgba(0,212,170,0.14);
-    color: var(--aktiv);
-    font-family: 'Barlow Condensed', sans-serif;
-  }
-
-  .card-time {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-  }
-
-  .card-time.kritisk-time { color: #ff7070; }
-
-  /* ── JOURNAL CARDS ── */
-  .journal-card {
-    border-radius: 8px;
-    padding: 13px 15px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--text-dim);
-    transition: transform 0.15s ease;
-  }
-
-  .journal-card.new-entry {
-    animation: slide-in 0.4s ease-out;
-  }
-
-  @keyframes slide-in {
-    from { opacity: 0; transform: translateY(-10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .journal-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 6px;
-  }
-
-  .journal-title {
-    font-size: 14px;
-    font-weight: 800;
-    color: #fff;
-    flex: 1;
-  }
-
-  .journal-time {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .journal-meta {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 6px;
-  }
-
-  .journal-body {
-    font-size: 12px;
-    color: #9ab5cc;
-    line-height: 1.45;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
+  /* ── SECTION SEPARATORS ── */
+  .sec-sep { display:flex; align-items:center; gap:10px; padding:4px 0 2px; flex-shrink:0; }
+  .sec-sep-line { flex:1; height:1px; background:var(--border); }
+  .sec-sep-label { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); white-space:nowrap; }
+  .sec-sep-count { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text-dim); }
 
   /* ── EMPTY STATE ── */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    gap: 10px;
-    color: var(--text-dim);
-  }
+  .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; gap:10px; color:var(--text-dim); }
+  .empty-state .es-icon { font-size:32px; opacity:0.35; }
+  .empty-state .es-text { font-size:12px; letter-spacing:1px; text-transform:uppercase; }
 
-  .empty-state .icon { font-size: 32px; opacity: 0.4; }
-  .empty-state .text { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+  /* ── BOTTOM STATUS BAR ── */
+  .statusbar { display:flex; align-items:center; justify-content:space-between; padding:0 16px; background:#050a10; border-top:1px solid var(--border); grid-column:1/-1; }
+  .sb-row { display:flex; align-items:center; gap:4px; }
+  .sb-item { display:flex; align-items:center; gap:6px; padding:0 12px; border-right:1px solid var(--border); }
+  .sb-item:last-child { border-right:none; }
+  .sb-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .sb-dot.green  { background:var(--aktiv); box-shadow:0 0 6px var(--aktiv); animation:pulse-dot 2s ease-in-out infinite; }
+  .sb-dot.red    { background:var(--kritisk); }
+  .sb-dot.amber  { background:var(--viktig); }
+  .sb-dot.blue   { background:var(--info); }
+  .sb-dot.orange { background:var(--asana); }
+  .sb-dot.dim    { background:var(--text-dim); }
+  .sb-num { font-family:'Share Tech Mono',monospace; font-size:14px; font-weight:700; color:var(--text-primary); line-height:1; }
+  .sb-num.red   { color:var(--kritisk); }
+  .sb-num.amber { color:var(--viktig); }
+  .sb-num.green { color:var(--aktiv); }
+  .sb-label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); white-space:nowrap; }
 
-  /* ── STATUS BAR ── */
-  .statusbar {
-    height: 28px;
-    background: #050a10;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    gap: 24px;
-    flex-shrink: 0;
-  }
+  /* ── CONFIG OVERLAY ── */
+  .config-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:100; backdrop-filter:blur(6px); transition:opacity 0.3s; }
+  .config-box { background:#0d1520; border:1px solid rgba(252,96,44,0.3); border-radius:14px; padding:34px 38px; width:500px; box-shadow:0 0 60px rgba(252,96,44,0.12); max-height:90vh; overflow-y:auto; }
+  .config-title { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:#fff; margin-bottom:6px; }
+  .config-sub { font-size:13px; color:var(--text-secondary); margin-bottom:26px; line-height:1.55; }
+  .config-field { margin-bottom:16px; }
+  .config-label { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-secondary); margin-bottom:6px; display:block; }
+  .config-input { width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:7px; padding:11px 14px; font-size:13px; color:#fff; font-family:'Share Tech Mono',monospace; outline:none; transition:border-color 0.2s; }
+  .config-input:focus { border-color:rgba(252,96,44,0.55); }
+  .config-hint { font-size:11px; color:var(--text-dim); margin-top:5px; line-height:1.45; }
+  .config-hint a { color:#7fb4ff; }
+  .config-divider { height:1px; background:var(--border); margin:20px 0; }
+  .config-btn { width:100%; padding:13px; background:var(--asana); border:none; border-radius:8px; font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; color:#fff; cursor:pointer; margin-top:8px; transition:background 0.2s,box-shadow 0.2s; }
+  .config-btn:hover { background:#ff7040; box-shadow:0 0 24px rgba(252,96,44,0.45); }
+  .config-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .error-text  { color:var(--kritisk); font-size:12px; margin-top:10px; text-align:center; display:none; }
+  .success-text { color:var(--aktiv); font-size:12px; margin-top:10px; text-align:center; display:none; }
 
-  .status-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 0.5px;
-  }
-
-  .status-dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-  }
-
-  .status-dot.green { background: var(--aktiv); box-shadow: 0 0 5px var(--aktiv); }
-  .status-dot.red   { background: var(--kritisk); }
-  .status-dot.yellow{ background: var(--viktig); }
-  .status-dot.blue  { background: var(--info); }
-
-  /* ── KRITISK BANNER ── */
-  .kritisk-banner {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 8px 20px;
-    background: rgba(255,40,40,0.12);
-    border-bottom: 1px solid rgba(255,40,40,0.30);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 14px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    color: #ff5555;
-    text-transform: uppercase;
-    animation: banner-pulse 1.5s ease-in-out infinite;
-    flex-shrink: 0;
-  }
-
-  .kritisk-banner.visible { display: flex; }
-
-  @keyframes banner-pulse {
-    0%, 100% { background: rgba(255,40,40,0.12); }
-    50% { background: rgba(255,40,40,0.20); }
-  }
-
-  /* ── SCROLLBAR ── */
-  .panel-body::-webkit-scrollbar { width: 4px; }
-  .panel-body::-webkit-scrollbar-track { background: transparent; }
-  .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-
+  /* ── ANTI-BURN ── */
+  body.shift-1 { transform:translate(1px,0); }
+  body.shift-2 { transform:translate(0,1px); }
+  body.shift-3 { transform:translate(-1px,0); }
+  body.shift-4 { transform:translate(0,-1px); }
 </style>
 </head>
 <body>
 
+<!-- CONFIG -->
+<div class="config-overlay" id="configOverlay">
+  <div class="config-box">
+    <div class="config-title">🟠 Asana Oppgaver – Oppsett</div>
+    <div class="config-sub">Kobler direkte til Asana API. Du trenger en Personal Access Token og prosjekt-ID(er).</div>
+    <div class="config-field">
+      <label class="config-label">Asana Personal Access Token</label>
+      <input class="config-input" id="cfgToken" placeholder="1/xxxxxxxxxxxxxxxx:xxxxxxxx..." />
+      <div class="config-hint">Generer på <a href="https://app.asana.com/0/my-apps" target="_blank">app.asana.com/0/my-apps</a> → «+ Create new token»</div>
+    </div>
+    <div class="config-field">
+      <label class="config-label">Prosjekt-ID(er) <span style="color:var(--text-dim);font-weight:400;text-transform:none">(kommaseparert)</span></label>
+      <input class="config-input" id="cfgProjects" placeholder="1234567890123456, 9876543210987654" />
+      <div class="config-hint">Finn i Asana-URL: asana.com/0/<strong style="color:#eef4fb">PROSJEKT_ID</strong>/…</div>
+    </div>
+    <div class="config-divider"></div>
+    <div class="config-field">
+      <label class="config-label">Oppdateringsintervall</label>
+      <select class="config-input" id="cfgInterval" style="cursor:pointer">
+        <option value="30">Hvert 30. sekund</option>
+        <option value="60" selected>Hvert minutt</option>
+        <option value="120">Hvert 2. minutt</option>
+        <option value="300">Hvert 5. minutt</option>
+      </select>
+    </div>
+    <button class="config-btn" id="cfgBtn" onclick="startLive()">🚀 Start Asana Dashboard</button>
+    <div class="error-text" id="configError"></div>
+    <div class="success-text" id="configSuccess"></div>
+  </div>
+</div>
 
-
-<!-- TOP BAR -->
+<!-- BANNERS -->
+<div class="offline-banner" id="offlineBanner">⚠️ ASANA-TILKOBLING TAPT – SISTE DATA FRA <span id="offlineTime">–</span></div>
 <div class="topbar">
   <div class="topbar-left">
-    <div class="logo-dot"></div>
-    <div>
-      <div class="topbar-title">Vaktsentral – Command Center</div>
-      <div class="topbar-subtitle" id="locationLabel">Mustad Eiendom</div>
+    <div class="logo-wrap">
+      <div class="logo-dot"></div>
+      <div class="radar-ring" id="radarRing"></div>
+    </div>
+    <div class="topbar-branding">
+      <div class="topbar-title">Vaktsentral – Oppgaver</div>
+      <div class="topbar-subtitle">Mustad Eiendom · Asana</div>
+    </div>
+    <div class="asana-badge"><div class="asana-badge-dot"></div>ASANA LIVE</div>
+  </div>
+  <div class="topbar-center">
+    <div class="meta-block">
+      <div class="meta-label">Forfalt</div>
+      <div class="meta-value red" id="metaOverdue">–</div>
+    </div>
+    <div class="meta-divider"></div>
+    <div class="meta-block">
+      <div class="meta-label">I dag</div>
+      <div class="meta-value amber" id="metaToday">–</div>
+    </div>
+    <div class="meta-divider"></div>
+    <div class="meta-block">
+      <div class="meta-label">Uke</div>
+      <div class="meta-value" id="weekNum">–</div>
+    </div>
+    <div class="meta-divider"></div>
+    <div class="meta-block">
+      <div class="meta-label">Oppdaterer om</div>
+      <div class="meta-value" id="nextRefresh">–</div>
     </div>
   </div>
   <div class="topbar-right">
-    <div class="refresh-indicator">
-      <div class="refresh-dot" id="refreshDot"></div>
-      <span id="refreshLabel">Oppdaterer om <span id="nextRefresh">30</span>s</span>
-    </div>
-    <div>
+    <a href="index.html" class="nav-btn">← Command Center</a>
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+    <div class="clock-block">
       <div class="clock" id="clock">00:00:00</div>
       <div class="date" id="dateLine">–</div>
     </div>
   </div>
 </div>
-
-<!-- KRITISK BANNER -->
-<div class="kritisk-banner" id="kritiskBanner">
-  🚨 KRITISK MELDING AKTIV – SE DRIFTMELDINGER
-</div>
+<div class="overdue-banner" id="overdueBanner">🚨 FORFALT OPPGAVE – KREVER UMIDDELBAR OPPFØLGING</div>
+<div class="holiday-banner" id="holidayBanner"></div>
 
 <!-- MAIN -->
 <div class="main">
 
-  <!-- PANEL 1: DRIFTMELDINGER -->
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title">
-        <span class="panel-title-icon">📡</span>
-        Driftmeldinger
+  <!-- STATS SIDEBAR -->
+  <div class="stats-sidebar">
+    <div class="stats-header"><span>📊</span> Status</div>
+    <div class="stats-body">
+
+      <div class="stat-card" id="overdueCard">
+        <div class="stat-card-label">Forfalt</div>
+        <div class="stat-big" id="statOverdue">0</div>
+        <div class="stat-sub" id="statOverdueSub">Ingen forfalt ✅</div>
       </div>
-      <div class="panel-count" id="driftCount">– aktive</div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">Oppgavestatus</div>
+        <div class="stat-row"><span class="stat-row-label">🔴 Forfalt</span><span class="stat-row-val red" id="s_overdue">0</span></div>
+        <div class="stat-row"><span class="stat-row-label">🟡 I dag</span><span class="stat-row-val amber" id="s_today">0</span></div>
+        <div class="stat-row"><span class="stat-row-label">🔵 Denne uken</span><span class="stat-row-val" id="s_week">0</span></div>
+        <div class="stat-row"><span class="stat-row-label">⚪ Fremtidige</span><span class="stat-row-val" id="s_future">0</span></div>
+        <div class="stat-row"><span class="stat-row-label">✅ Fullført i dag</span><span class="stat-row-val green" id="s_done">0</span></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">Fullført i dag</div>
+        <div class="stat-big green" id="statDone">0</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Fremgang</span><span id="progressPct">0%</span></div>
+          <div class="progress-bar"><div class="progress-fill green" id="progressFill" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">Prosjekter <span style="font-size:9px;color:var(--text-dim)">(klikk for filter)</span></div>
+        <div class="project-list" id="projectList"><div style="font-size:11px;color:var(--text-dim);padding:6px 0">Laster...</div></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">Uten frist</div>
+        <div class="stat-big" id="statNoDue">0</div>
+        <div class="stat-sub">oppgaver mangler dato</div>
+      </div>
+
     </div>
-    <div class="panel-body" id="driftBody">
-      <div class="empty-state">
-        <div class="icon">📡</div>
-        <div class="text">Laster meldinger...</div>
-      </div>
+    <div class="refresh-bar">
+      <div class="refresh-dot" id="refreshDot"></div>
+      SIST: <span id="lastUpdated" style="margin-left:4px">–</span>
     </div>
   </div>
 
-  <!-- PANEL 2: JOURNAL -->
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title">
-        <span class="panel-title-icon">📋</span>
-        Hendelseslogg
-      </div>
-      <div class="panel-count" id="journalCount">– oppføringer</div>
+  <!-- TASK COLUMN -->
+  <div class="task-column">
+    <div class="task-column-header">
+      <div class="task-column-title"><span>✅</span> Oppgaver</div>
+      <div class="task-column-count" id="taskColCount">–</div>
     </div>
-    <div class="panel-body" id="journalBody">
-      <div class="empty-state">
-        <div class="icon">📋</div>
-        <div class="text">Laster journal...</div>
-      </div>
+    <div class="task-body" id="taskBody">
+      <div class="empty-state"><div class="es-icon">🔄</div><div class="es-text">Kobler til Asana...</div></div>
     </div>
   </div>
 
-</div>
-
-<!-- STATUS BAR -->
-<div class="statusbar">
-  <div class="status-item">
-    <div class="status-dot green"></div>
-    SYSTEM ONLINE
-  </div>
-  <div class="status-item" id="kritiskCount">
-    <div class="status-dot red"></div>
-    <span id="kritiskNum">0</span> KRITISK
-  </div>
-  <div class="status-item" id="viktigCount">
-    <div class="status-dot yellow"></div>
-    <span id="viktigNum">0</span> VIKTIG
-  </div>
-  <div class="status-item" id="infoCount">
-    <div class="status-dot blue"></div>
-    <span id="infoNum">0</span> INFO
-  </div>
-  <div class="status-item" style="margin-left:auto;">
-    SIST OPPDATERT: <span id="lastUpdated" style="margin-left:6px;">–</span>
+  <!-- BOTTOM STATUS BAR -->
+  <div class="statusbar">
+    <div class="sb-row">
+      <div class="sb-item"><div class="sb-dot green"></div><div class="sb-label">Asana Live</div></div>
+      <div class="sb-item"><div class="sb-dot red"></div><div class="sb-num red" id="sbOverdue">0</div><div class="sb-label">Forfalt</div></div>
+      <div class="sb-item"><div class="sb-dot amber"></div><div class="sb-num amber" id="sbToday">0</div><div class="sb-label">I dag</div></div>
+      <div class="sb-item"><div class="sb-dot blue"></div><div class="sb-num" id="sbWeek">0</div><div class="sb-label">Denne uken</div></div>
+    </div>
+    <div class="sb-row">
+      <div class="sb-item"><div class="sb-num green" id="sbDone">0</div><div class="sb-label">Fullført i dag</div></div>
+      <div class="sb-item"><div class="sb-dot orange"></div><div class="sb-num" id="sbTotal" style="font-size:11px">–</div><div class="sb-label">Totalt åpne</div></div>
+    </div>
   </div>
 </div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────
-let CONFIG = {
-  siteUrl: 'https://mustadeiendom.sharepoint.com/sites/Vaktsentral',
-  driftList: 'Vaktsentral Nyhetsoppslag',
-  journalList: 'Vaktsentral_Journal',
-  mode: 'live'
-};
-let refreshInterval = null;
-let countdownInterval = null;
-let countdown = 30;
+// ═══ HELPERS ═══════════════════════════════════════════════
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function getWeekNum(d){d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));return Math.ceil((((d-new Date(Date.UTC(d.getUTCFullYear(),0,1)))/86400000)+1)/7);}
+function initials(n){if(!n)return'?';return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function today0(){const d=new Date();d.setHours(0,0,0,0);return d;}
 
-// ── CLOCK ────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent =
-    now.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  document.getElementById('dateLine').textContent =
-    now.toLocaleDateString('no-NO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-}
-setInterval(updateClock, 1000);
-updateClock();
+function parseDue(ds){if(!ds)return null;const d=new Date(ds+'T00:00:00');return isNaN(d)?null:d;}
+function isOverdue(ds){const d=parseDue(ds);return d&&d<today0();}
+function isDueToday(ds){const d=parseDue(ds);const t=today0();return d&&d.getTime()===t.getTime();}
+function isDueThisWeek(ds){const d=parseDue(ds);if(!d)return false;const t=today0();const diff=Math.round((d-t)/86400000);return diff>0&&diff<=7;}
+function wasDoneToday(ts){if(!ts)return false;const d=new Date(ts);return d.toDateString()===new Date().toDateString();}
 
-// ── COUNTDOWN ────────────────────────────────────────────
-function startCountdown() {
-  countdown = 30;
-  clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    countdown--;
-    document.getElementById('nextRefresh').textContent = countdown;
-    if (countdown <= 0) countdown = 30;
-  }, 1000);
+function duePillHtml(ds,done){
+  if(done)return`<span class="due-pill done-pill">✅ Ferdig</span>`;
+  if(!ds)return`<span class="due-pill no-due">Ingen frist</span>`;
+  const d=parseDue(ds);if(!d)return'';
+  const t=today0(),diff=Math.round((d-t)/86400000);
+  if(diff<0)return`<span class="due-pill overdue">⚠️ ${Math.abs(diff)}d forfalt</span>`;
+  if(diff===0)return`<span class="due-pill today">📅 I dag</span>`;
+  if(diff===1)return`<span class="due-pill week">I morgen</span>`;
+  if(diff<=7)return`<span class="due-pill week">Om ${diff} dager</span>`;
+  return`<span class="due-pill future">${d.toLocaleDateString('no-NO',{day:'numeric',month:'short'})}</span>`;
 }
 
-// ── CATEGORY EMOJI ───────────────────────────────────────
-function kategoriEmoji(kat) {
-  if (!kat) return '⚙️';
-  const k = kat.toLowerCase();
-  if (k.includes('adgang'))  return '🔐';
-  if (k.includes('nøkkel'))  return '🗝️';
-  if (k.includes('kode') || k.includes('pin')) return '🔢';
-  if (k.includes('alarm'))   return '🚨';
-  if (k.includes('kamera') || k.includes('itv')) return '📷';
-  if (k.includes('rutine') || k.includes('prosedyre')) return '📄';
-  if (k.includes('dør') || k.includes('port')) return '🚪';
-  if (k.includes('system'))  return '💻';
-  return '⚙️';
+function norwegianHoliday(date){
+  const d=date.getDate(),m=date.getMonth()+1,y=date.getFullYear();
+  const fixed={'1-1':'🎉 Nyttårsdag','1-5':'🌹 Arbeidernes dag','17-5':'🇳🇴 Grunnlovsdag','25-12':'🎄 1. juledag','26-12':'🎄 2. juledag','24-12':'🎄 Julaften','31-12':'🎆 Nyttårsaften'};
+  if(fixed[`${d}-${m}`])return fixed[`${d}-${m}`];
+  const e=getEaster(y),diff=(date-e)/86400000;
+  const ed={'-3':'🙏 Skjærtorsdag','-2':'✝️ Langfredag','0':'🐣 Påskedag','1':'🐣 2. påskedag','39':'✝️ Kristi himmelfartsdag','49':'🕊️ Pinsedag','50':'🕊️ 2. pinsedag'};
+  return ed[String(Math.round(diff))]||null;
+}
+function getEaster(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,mo=Math.floor((a+11*h+22*l)/451),month=Math.floor((h+l-7*mo+114)/31),day=((h+l-7*mo+114)%31)+1;return new Date(y,month-1,day);}
+
+// ═══ STATE ════════════════════════════════════════════════
+let asanaToken='',projectIds=[],refreshIntervalSec=60;
+let refreshTimer=null,countdownSec=60,countdownTimer=null;
+let lastSuccess=null,isOffline=false,reconnectTimer=null;
+let allTasks=[],currentUserGid=null,filterProjectGid=null;
+let isFirstRender=true;
+
+// ═══ CLOCK ════════════════════════════════════════════════
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleTimeString('no-NO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('dateLine').textContent=now.toLocaleDateString('no-NO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('weekNum').textContent=`Uke ${getWeekNum(now)}`;
+  document.getElementById('nextRefresh').textContent=countdownSec+'s';
+  const hol=norwegianHoliday(now);
+  const hb=document.getElementById('holidayBanner');
+  if(hol){hb.textContent=hol;hb.classList.add('visible');}else hb.classList.remove('visible');
+}
+setInterval(updateClock,1000);updateClock();
+
+function startCountdown(){
+  countdownSec=refreshIntervalSec;clearInterval(countdownTimer);
+  countdownTimer=setInterval(()=>{countdownSec--;if(countdownSec<0)countdownSec=refreshIntervalSec;},1000);
 }
 
-function viktEmoji(grad) {
-  if (grad === 'Kritisk') return '🔴';
-  if (grad === 'Viktig')  return '🟡';
-  return '🔵';
+// ═══ RADAR / FULLSCREEN / ANTI-BURN ═══════════════════════
+function triggerRadar(){const r=document.getElementById('radarRing');r.classList.remove('active');void r.offsetWidth;r.classList.add('active');}
+function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();}
+let burnIdx=0;
+setInterval(()=>{
+  document.body.classList.remove('shift-1','shift-2','shift-3','shift-4');
+  burnIdx=(burnIdx+1)%4;
+  document.body.classList.add('shift-'+(burnIdx+1));
+},60000);
+(function scheduleMidnight(){const now=new Date(),t=new Date(now);t.setHours(4,0,0,0);if(t<=now)t.setDate(t.getDate()+1);setTimeout(()=>location.reload(),t-now);})();
+
+// ═══ OFFLINE ══════════════════════════════════════════════
+function setOffline(v){
+  if(v===isOffline)return;isOffline=v;
+  const b=document.getElementById('offlineBanner');
+  if(v){
+    b.classList.add('visible');
+    if(lastSuccess)document.getElementById('offlineTime').textContent=lastSuccess.toLocaleTimeString('no-NO',{hour:'2-digit',minute:'2-digit'});
+    clearInterval(reconnectTimer);reconnectTimer=setInterval(()=>loadData(),10000);
+  }else{b.classList.remove('visible');clearInterval(reconnectTimer);}
 }
 
-function formatTime(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  const today = new Date();
-  const isToday = d.toDateString() === today.toDateString();
-  const time = d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
-  if (isToday) return `i dag ${time}`;
-  return d.toLocaleDateString('no-NO', { day: 'numeric', month: 'short' }) + ' ' + time;
+// ═══ PROJECT FILTER ═══════════════════════════════════════
+function setProjectFilter(gid){
+  filterProjectGid=(filterProjectGid===gid)?null:gid;
+  document.querySelectorAll('.project-row').forEach(r=>r.classList.toggle('active',r.dataset.gid===filterProjectGid));
+  renderTasks(allTasks);
 }
 
-// ── RENDER DRIFT ─────────────────────────────────────────
-function renderDrift(items) {
-  const body = document.getElementById('driftBody');
-  const banner = document.getElementById('kritiskBanner');
+// ═══ RENDER ═══════════════════════════════════════════════
+function renderTasks(tasks){
+  allTasks=tasks;
+  const body=document.getElementById('taskBody');
 
-  const aktive = items
-    .filter(i => i.Aktiv)
-    .sort((a, b) => {
-      const order = { Kritisk: 1, Viktig: 2, Info: 3 };
-      const ao = order[a.Viktighetsgrad] || 9;
-      const bo = order[b.Viktighetsgrad] || 9;
-      if (ao !== bo) return ao - bo;
-      return new Date(b.Modified || b.Created) - new Date(a.Modified || a.Created);
-    });
+  let list=filterProjectGid?tasks.filter(t=>t.memberships?.some(m=>m.project?.gid===filterProjectGid)):tasks;
 
-  const kritisk = aktive.filter(i => i.Viktighetsgrad === 'Kritisk').length;
-  const viktig  = aktive.filter(i => i.Viktighetsgrad === 'Viktig').length;
-  const info    = aktive.filter(i => i.Viktighetsgrad === 'Info').length;
+  const open=list.filter(t=>!t.completed);
+  const done=list.filter(t=>t.completed&&wasDoneToday(t.completed_at));
 
-  document.getElementById('driftCount').textContent = `${aktive.length} aktive`;
-  document.getElementById('kritiskNum').textContent = kritisk;
-  document.getElementById('viktigNum').textContent  = viktig;
-  document.getElementById('infoNum').textContent    = info;
+  const overdue=open.filter(t=>isOverdue(t.due_on));
+  const dueToday=open.filter(t=>isDueToday(t.due_on));
+  const dueWeek=open.filter(t=>isDueThisWeek(t.due_on));
+  const future=open.filter(t=>{const d=parseDue(t.due_on);return d&&!isOverdue(t.due_on)&&!isDueToday(t.due_on)&&!isDueThisWeek(t.due_on);});
+  const noDue=open.filter(t=>!t.due_on);
 
-  banner.classList.toggle('visible', kritisk > 0);
+  // Stats
+  document.getElementById('statOverdue').textContent=overdue.length;
+  document.getElementById('statOverdue').className='stat-big'+(overdue.length>0?' red':'');
+  document.getElementById('statOverdueSub').textContent=overdue.length>0?`${overdue.length} forfalt oppgave${overdue.length>1?'r':''}!`:'Ingen forfalt ✅';
+  document.getElementById('overdueCard').style.borderColor=overdue.length>0?'rgba(255,40,40,0.3)':'';
+  document.getElementById('s_overdue').textContent=overdue.length;
+  document.getElementById('s_today').textContent=dueToday.length;
+  document.getElementById('s_week').textContent=dueWeek.length;
+  document.getElementById('s_future').textContent=future.length+noDue.length;
+  document.getElementById('s_done').textContent=done.length;
+  document.getElementById('statDone').textContent=done.length;
+  document.getElementById('statNoDue').textContent=noDue.length;
+  document.getElementById('metaOverdue').textContent=overdue.length>0?`⚠️ ${overdue.length}`:'0';
+  document.getElementById('metaToday').textContent=dueToday.length;
+  document.getElementById('sbOverdue').textContent=overdue.length;
+  document.getElementById('sbToday').textContent=dueToday.length;
+  document.getElementById('sbWeek').textContent=dueWeek.length;
+  document.getElementById('sbDone').textContent=done.length;
+  document.getElementById('sbTotal').textContent=open.length;
 
-  if (aktive.length === 0) {
-    body.innerHTML = `<div class="empty-state"><div class="icon">✅</div><div class="text">Ingen aktive driftmeldinger</div></div>`;
-    return;
-  }
+  const totalForPct=open.length+done.length;
+  const pct=totalForPct>0?Math.round((done.length/totalForPct)*100):0;
+  document.getElementById('progressPct').textContent=pct+'%';
+  const fill=document.getElementById('progressFill');
+  fill.style.width=pct+'%';
+  fill.className='progress-fill '+(pct>66?'green':pct>33?'amber':'red');
 
-  body.innerHTML = aktive.map(item => {
-    const grad = item.Viktighetsgrad || 'Info';
-    const gradLow = grad.toLowerCase();
-    const emoji = viktEmoji(grad);
-    const katEmoji = kategoriEmoji(item.Kategori);
-    const isKritisk = grad === 'Kritisk';
-    const timeStr = formatTime(item.Modified || item.Created);
+  document.getElementById('overdueBanner').classList.toggle('visible',overdue.length>0);
 
-    return `
-      <div class="drift-card ${gradLow}${isKritisk ? ' blink-card' : ''}">
-        <div class="card-top">
-          <div class="card-title">${escHtml(item.Title || '–')}</div>
-          <div class="badge ${gradLow}">${emoji} ${grad.toUpperCase()}</div>
-        </div>
-        <div class="card-chips">
-          ${item.Kategori ? `<span class="chip">${katEmoji} ${escHtml(item.Kategori)}</span>` : ''}
-          ${item.Gjelder  ? `<span class="chip">📍 ${escHtml(item.Gjelder)}</span>` : ''}
-        </div>
-        ${item.Melding ? `<div class="card-message">${escHtml(item.Melding)}</div>` : ''}
-        <div class="card-footer">
-          ${item.Aktiv ? '<span class="aktiv-badge">⚡ AKTIV</span>' : ''}
-          <span class="card-time ${isKritisk ? 'kritisk-time' : ''}">${isKritisk ? '🚨 ' : '🕐 '}${timeStr}</span>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-// ── RENDER JOURNAL ───────────────────────────────────────
-function renderJournal(items) {
-  const body = document.getElementById('journalBody');
-  document.getElementById('journalCount').textContent = `${items.length} oppføringer`;
-
-  if (items.length === 0) {
-    body.innerHTML = `<div class="empty-state"><div class="icon">📋</div><div class="text">Ingen hendelser logget</div></div>`;
-    return;
-  }
-
-  // Sort newest first
-  const sorted = [...items].sort((a, b) =>
-    new Date(b.Created || 0) - new Date(a.Created || 0)
-  );
-
-  body.innerHTML = sorted.map((item, idx) => {
-    const timeStr = formatTime(item.Created);
-    // Support multiple possible column names
-    const status = item.Status || item.StatusField || item.Hendelsestype || '';
-    const kategori = item.Kategori || item.Type || item.HendelsesKategori || '';
-    const sted = item.Sted || item.Lokasjon || item.Bygg || item.Adresse || '';
-    const melding = item.Beskrivelse || item.Melding || item.Notat || item.Kommentar || item.Body || '';
-    return `
-      <div class="journal-card${idx === 0 ? ' new-entry' : ''}">
-        <div class="journal-top">
-          <div class="journal-title">${escHtml(item.Title || '–')}</div>
-          <div class="journal-time">${timeStr}</div>
-        </div>
-        ${status || kategori || sted ? `
-        <div class="journal-meta">
-          ${status   ? `<span class="chip">${escHtml(status)}</span>` : ''}
-          ${kategori ? `<span class="chip">${escHtml(kategori)}</span>` : ''}
-          ${sted     ? `<span class="chip">📍 ${escHtml(sted)}</span>` : ''}
-        </div>` : ''}
-        ${melding ? `
-        <div class="journal-body">${escHtml(melding)}</div>` : ''}
-      </div>`;
-  }).join('');
-}
-
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── FETCH FROM SHAREPOINT ────────────────────────────────
-async function fetchList(siteUrl, listName, filter = '') {
-  const base = siteUrl.replace(/\/$/, '');
-  let url = `${base}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$top=50&$orderby=Created desc`;
-  if (filter) url += `&$filter=${filter}`;
-  const res = await fetch(url, {
-    credentials: 'include',
-    headers: {
-      'Accept': 'application/json;odata=nometadata',
-      'Content-Type': 'application/json;odata=nometadata'
-    }
+  // Project sidebar
+  const projMap={};
+  tasks.filter(t=>!t.completed).forEach(t=>{
+    const m=t.memberships?.find(m=>m.project);
+    const gid=m?.project?.gid||'unknown';
+    const name=m?.project?.name||'Ukjent prosjekt';
+    if(!projMap[gid])projMap[gid]={name,total:0,overdue:0};
+    projMap[gid].total++;
+    if(isOverdue(t.due_on))projMap[gid].overdue++;
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${listName}`);
-  const data = await res.json();
-  return data.value || [];
-}
-
-async function loadData() {
-  if (CONFIG.mode === 'demo') { loadDemo(); return; }
-
-  const dot = document.getElementById('refreshDot');
-  dot.classList.add('syncing');
-  setTimeout(() => dot.classList.remove('syncing'), 1200);
-
-  try {
-    const [drift, journal] = await Promise.all([
-      fetchList(CONFIG.siteUrl, CONFIG.driftList),
-      fetchList(CONFIG.siteUrl, CONFIG.journalList)
-    ]);
-    renderDrift(drift);
-    renderJournal(journal);
-    document.getElementById('lastUpdated').textContent =
-      new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  } catch (err) {
-    console.error('Fetch error:', err);
-    document.getElementById('driftBody').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div><div class="text">Kunne ikke laste data</div></div>`;
+  const pl=document.getElementById('projectList');
+  const entries=Object.entries(projMap);
+  if(entries.length===0){pl.innerHTML='<div style="font-size:11px;color:var(--text-dim);padding:4px 0">Ingen prosjekter</div>';}
+  else{
+    pl.innerHTML=entries.map(([gid,p])=>`
+      <div class="project-row${filterProjectGid===gid?' active':''}" data-gid="${esc(gid)}" onclick="setProjectFilter('${esc(gid)}')">
+        <span class="project-row-name">📁 ${esc(p.name)}</span>
+        <span class="project-row-count${p.overdue>0?' danger':''}">${p.overdue>0?'⚠️'+p.overdue+' / ':''}${p.total}</span>
+      </div>`).join('');
   }
 
-  startCountdown();
+  // Build task list
+  if(open.length===0&&done.length===0){
+    body.innerHTML='<div class="empty-state"><div class="es-icon">✅</div><div class="es-text">Ingen oppgaver å vise</div></div>';
+    return;
+  }
+
+  let html='';
+
+  // Overdue
+  if(overdue.length>0){
+    html+=sep('🔴 FORFALT',overdue.length);
+    html+=overdue.sort((a,b)=>new Date(a.due_on)-new Date(b.due_on)).map(t=>taskCard(t,'overdue')).join('');
+  }
+
+  // Due today
+  if(dueToday.length>0){
+    html+=sep('📅 FORFALLER I DAG',dueToday.length);
+    html+=dueToday.map(t=>taskCard(t,'due-today')).join('');
+  }
+
+  // Due this week – grouped by day
+  if(dueWeek.length>0){
+    html+=sep('📆 DENNE UKEN',dueWeek.length);
+    const byDay={};
+    dueWeek.sort((a,b)=>new Date(a.due_on)-new Date(b.due_on)).forEach(t=>{if(!byDay[t.due_on])byDay[t.due_on]=[];byDay[t.due_on].push(t);});
+    Object.keys(byDay).sort().forEach(day=>{
+      const d=new Date(day+'T00:00:00');
+      const label=d.toLocaleDateString('no-NO',{weekday:'long',day:'numeric',month:'short'});
+      html+=`<div class="sec-sep" style="padding-left:8px"><div class="sec-sep-line"></div><div class="sec-sep-label" style="font-size:9px;color:var(--text-dim)">${esc(label.toUpperCase())}</div><div class="sec-sep-line"></div></div>`;
+      html+=byDay[day].map(t=>taskCard(t,'due-week')).join('');
+    });
+  }
+
+  // Future + no due
+  const futureAll=[...future,...noDue];
+  if(futureAll.length>0){
+    html+=sep('── FREMTIDIGE OPPGAVER ──',futureAll.length);
+    html+=futureAll.sort((a,b)=>{if(!a.due_on&&b.due_on)return 1;if(a.due_on&&!b.due_on)return -1;if(a.due_on&&b.due_on)return new Date(a.due_on)-new Date(b.due_on);return 0;}).map(t=>taskCard(t,'future')).join('');
+  }
+
+  // Done today
+  if(done.length>0){
+    html+=sep('── FULLFØRT I DAG ──',done.length);
+    html+=done.map(t=>taskCard(t,'done')).join('');
+  }
+
+  body.innerHTML=html;
 }
 
-// ── DEMO DATA ────────────────────────────────────────────
-function loadDemo() {
-  const driftDemo = [
-    { Title: 'Heisalarm – CC Vest', Viktighetsgrad: 'Kritisk', Aktiv: true,
-      Kategori: 'Alarm', Gjelder: 'CC Vest', Modified: new Date().toISOString(),
-      Melding: 'Heis nr. 3 har utløst nødstopp. Tekniker er varslet og på vei. Ikke bruk heisen.' },
-    { Title: 'Ny kode til nøkkelboks', Viktighetsgrad: 'Viktig', Aktiv: true,
-      Kategori: 'Kode', Gjelder: 'LV8 Garasje', Modified: new Date(Date.now()-3600000).toISOString(),
-      Melding: 'Kode endret fra 18:00 i dag. Gammel kode er deaktivert. Ny kode i låst konvolutt på vaktrommet.' },
-    { Title: 'Kameraoppdatering', Viktighetsgrad: 'Info', Aktiv: true,
-      Kategori: 'Kamera', Gjelder: 'Hele porteføljen', Modified: new Date(Date.now()-7200000).toISOString(),
-      Melding: 'Planlagt vedlikehold på kamerasystemet lørdag 01:00–03:00. Kameraer vil være nede i perioden.' }
-  ];
-  const journalDemo = [
-    { Title: 'Patrulje – CC Vest parkering', Created: new Date().toISOString(),
-      Status: 'Fullført', Kategori: 'Patrulje', Sted: 'CC Vest',
-      Beskrivelse: 'Rutinepatrulje fullført. Ingen avvik observert.' },
-    { Title: 'Innbruddsforsøk garasje LV8', Created: new Date(Date.now()-1800000).toISOString(),
-      Status: 'Under behandling', Kategori: 'Innbrudd', Sted: 'LV8',
-      Beskrivelse: 'Forsøk på å bryte seg inn via garasjeport. Politi varslet, ref. 2024-110234.' },
-    { Title: 'Besøkende – leietaker Acme AS', Created: new Date(Date.now()-3600000).toISOString(),
-      Status: 'Fullført', Kategori: 'Adgang', Sted: 'LV8 3. etg',
-      Beskrivelse: 'Besøkende registrert og eskortert til møterom 3B.' },
-    { Title: 'Brannvarsel – automatisk', Created: new Date(Date.now()-5400000).toISOString(),
-      Status: 'Avklart', Kategori: 'Alarm', Sted: 'CC Vest kjøkken',
-      Beskrivelse: 'Automatisk brannvarsel utløst av matos. Ingen fare. Reset utført.' },
-    { Title: 'Vaktbytte – dagvakt til kveldsvakt', Created: new Date(Date.now()-7200000).toISOString(),
-      Status: 'Fullført', Kategori: 'Rutine', Sted: 'Vaktrom',
-      Beskrivelse: 'Normalt vaktbytte. Ingen pågående hendelser ved overleveringen.' }
-  ];
-  renderDrift(driftDemo);
-  renderJournal(journalDemo);
-  document.getElementById('lastUpdated').textContent =
-    new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  startCountdown();
+function sep(label,count){
+  return`<div class="sec-sep"><div class="sec-sep-line"></div><div class="sec-sep-label">${esc(label)}</div><span class="sec-sep-count">${count}</span><div class="sec-sep-line"></div></div>`;
 }
 
-// ── AUTO START ───────────────────────────────────────────
-window.addEventListener('load', () => {
-  loadData();
-  refreshInterval = setInterval(loadData, 30000);
-});
+function taskCard(t,type){
+  const isDone=type==='done';
+  const name=t.name||'Ukjent oppgave';
+  const assignee=t.assignee?.name||'';
+  const membership=t.memberships?.find(m=>m.project);
+  const projName=membership?.project?.name||'';
+  const notes=(t.notes||'').trim();
+  const tags=(t.tags||[]).slice(0,3);
+  const pill=duePillHtml(t.due_on,isDone);
+  const av=initials(assignee);
+  const link=t.permalink_url?`<a class="open-link" href="${esc(t.permalink_url)}" target="_blank">↗ Åpne</a>`:'';
+  const chipHtml=tags.map(tg=>`<span class="chip tag">🏷 ${esc(tg.name)}</span>`).join('');
+  return`<div class="task-card ${type}">
+    <div class="task-top">
+      <div class="task-name${isDone?' done-name':''}">${type==='overdue'?'🔴 ':type==='due-today'?'🟡 ':''}${esc(name)}</div>
+      ${pill}
+    </div>
+    ${notes?`<div class="task-notes">${esc(notes)}</div>`:''}
+    ${chipHtml?`<div class="task-chips">${chipHtml}</div>`:''}
+    <div class="task-footer">
+      <div class="task-assignee">
+        ${assignee?`<div class="avatar">${esc(av)}</div><span class="assignee-name">${esc(assignee)}</span>`:'<div style="width:22px"></div>'}
+      </div>
+      <div class="project-label">${projName?'📁 '+esc(projName):''}</div>
+      ${link}
+    </div>
+  </div>`;
+}
+
+// ═══ ASANA API ════════════════════════════════════════════
+const BASE='https://app.asana.com/api/1.0';
+const FIELDS='gid,name,notes,completed,completed_at,due_on,assignee,assignee.name,assignee.gid,memberships,memberships.section.name,memberships.project.name,memberships.project.gid,tags,tags.name,permalink_url,modified_at';
+
+async function afetch(path){
+  const r=await fetch(BASE+path,{headers:{'Authorization':'Bearer '+asanaToken,'Accept':'application/json'}});
+  if(!r.ok){const e=await r.json().catch(()=>({errors:[{message:r.statusText}]}`;
+  throw new Error(e.errors?.[0]?.message||'HTTP '+r.status);}
+  return r.json();
+}
+
+async function getProjectTasks(gid){
+  let tasks=[],offset=null;
+  do{
+    const p=new URLSearchParams({project:gid,completed_since:'now',opt_fields:FIELDS,limit:'100'});
+    if(offset)p.set('offset',offset);
+    const d=await afetch('/tasks?'+p);
+    tasks=tasks.concat(d.data||[]);
+    offset=d.next_page?.offset||null;
+  }while(offset);
+  return tasks;
+}
+
+async function getDoneToday(gid){
+  const t=new Date();t.setHours(0,0,0,0);
+  const p=new URLSearchParams({project:gid,completed_since:t.toISOString(),opt_fields:FIELDS,limit:'50'});
+  const d=await afetch('/tasks?'+p);
+  return(d.data||[]).filter(t=>t.completed);
+}
+
+// ═══ LOAD DATA ════════════════════════════════════════════
+async function loadData(){
+  const dot=document.getElementById('refreshDot');
+  if(dot)dot.classList.add('syncing');
+  try{
+    const [userRes,...openArrays]=await Promise.all([
+      currentUserGid?Promise.resolve({gid:currentUserGid}):afetch('/users/me').then(d=>d.data),
+      ...projectIds.map(gid=>getProjectTasks(gid).catch(()=>[]))
+    ]);
+    if(!currentUserGid&&userRes?.gid)currentUserGid=userRes.gid;
+    const doneArrays=await Promise.all(projectIds.map(gid=>getDoneToday(gid).catch(()=>[])));
+    const taskMap=new Map();
+    openArrays.flat().forEach(t=>taskMap.set(t.gid,t));
+    doneArrays.flat().forEach(t=>taskMap.set(t.gid,t));
+    const tasks=Array.from(taskMap.values());
+    lastSuccess=new Date();
+    setOffline(false);
+    triggerRadar();
+    renderTasks(tasks);
+    isFirstRender=false;
+    document.getElementById('lastUpdated').textContent=lastSuccess.toLocaleTimeString('no-NO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }catch(err){
+    console.error('Asana error:',err);
+    setOffline(true);
+    if(isFirstRender){const el=document.getElementById('configError');el.style.display='block';el.textContent='Feil: '+err.message;}
+  }finally{
+    if(dot)setTimeout(()=>dot.classList.remove('syncing'),1200);
+  }
+}
+
+// ═══ START ════════════════════════════════════════════════
+async function startLive(){
+  const token=document.getElementById('cfgToken').value.trim();
+  const projects=document.getElementById('cfgProjects').value.trim();
+  refreshIntervalSec=parseInt(document.getElementById('cfgInterval').value)||60;
+  if(!token){alert('Fyll inn Asana Personal Access Token');return;}
+  if(!projects){alert('Fyll inn minst ett prosjekt-ID');return;}
+  asanaToken=token;projectIds=projects.split(',').map(s=>s.trim()).filter(Boolean);
+  const btn=document.getElementById('cfgBtn');
+  btn.textContent='Kobler til...';btn.disabled=true;
+  document.getElementById('configError').style.display='none';
+  try{
+    const me=await afetch('/users/me').then(d=>d.data);
+    currentUserGid=me?.gid;
+    const succ=document.getElementById('configSuccess');
+    succ.style.display='block';succ.textContent='✅ Tilkoblet som '+(me?.name||'ukjent');
+    await loadData();
+    const ov=document.getElementById('configOverlay');
+    ov.style.opacity='0';setTimeout(()=>ov.style.display='none',300);
+    clearInterval(refreshTimer);
+    refreshTimer=setInterval(loadData,refreshIntervalSec*1000);
+    startCountdown();
+    sessionStorage.setItem('a_tok',token);
+    sessionStorage.setItem('a_proj',projects);
+    sessionStorage.setItem('a_int',refreshIntervalSec);
+  }catch(err){
+    const el=document.getElementById('configError');el.style.display='block';el.textContent='Feil: '+err.message;
+  }finally{btn.textContent='🚀 Start Asana Dashboard';btn.disabled=false;}
+}
+
+window.onload=()=>{
+  const p=new URLSearchParams(location.search);
+  const tok=p.get('token')||sessionStorage.getItem('a_tok')||'';
+  const proj=p.get('projects')||sessionStorage.getItem('a_proj')||'';
+  const intv=p.get('interval')||sessionStorage.getItem('a_int')||'60';
+  if(tok&&proj){
+    document.getElementById('cfgToken').value=tok;
+    document.getElementById('cfgProjects').value=proj;
+    document.getElementById('cfgInterval').value=intv;
+    startLive();
+  }
+};
 </script>
 </body>
 </html>
